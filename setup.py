@@ -13,5 +13,7 @@ setup(name='astral',
       author='Astral Project Group',
       author_email='astral@bueda.com',
       url='http://github.com/peplin/astral',
+      test_suite='nose.collector',
+      setup_requires=['nose>=0.11'],
       packages=find_packages(),
 )
