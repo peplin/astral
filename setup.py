@@ -14,6 +14,10 @@ setup(name='astral',
       author_email='astral@bueda.com',
       url='http://github.com/peplin/astral',
       test_suite='nose.collector',
-      setup_requires=['nose>=0.11'],
+      setup_requires=['nose>=0.11', 'unittest>=0.5.1'],
       packages=find_packages(),
+      entry_points={
+          'console_scripts': [
+              'astralnode = astral.bin.astralnode:main',],
+      },
 )
