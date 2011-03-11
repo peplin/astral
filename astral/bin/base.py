@@ -8,7 +8,7 @@ Base class for command line utilities.
 import os
 import sys
 
-from optparse import OptionParser
+from optparse import OptionParser, make_option as Option
 
 import astral
 
@@ -21,8 +21,18 @@ class Command(object):
     supports_args = True
     enable_config_from_cmdline = False
     namespace = "astral"
+    preload_options = (
+            Option("--config",
+                    default="astralconfig", action="store",
+                    dest="config_module",
+                    help="Name of the module to read configuration from."),
+    )
 
     Parser = OptionParser
+
+    def __init__(self, node=None, get_node=None):
+        self.node = node
+        self.get_node = get_node or self._get_default_node
 
     def usage(self):
         return "%%prog [options] %s" % (self.args, )
@@ -65,12 +75,36 @@ class Command(object):
         return self.Parser(prog=prog_name,
                            usage=self.usage(),
                            version=self.version,
-                           option_list=self.get_options())
+                           option_list=(self.preload_options +
+                                        self.get_options()))
 
     def setup_node_from_commandline(self, argv):
+        preload_options = self.parse_preload_options(argv)
+        node = (preload_options.pop("node", None) or
+               os.environ.get("ASTRAL_NODE") or
+               self.node)
+        config_module = preload_options.pop("config_module", None)
+        if config_module:
+            os.environ["ASTRAL_CONFIG_MODULE"] = config_module
+        if node:
+            self.node = self.get_cls_by_name(node)
+        else:
+            self.node = self.get_node()
         if self.enable_config_from_cmdline:
             argv = self.process_cmdline_config(argv)
         return argv
+
+    def parse_preload_options(self, args):
+        acc = {}
+        preload_options = dict((opt._long_opts[0], opt.dest)
+                                for opt in self.preload_options)
+        for arg in args:
+            if arg.startswith('--') and '=' in arg:
+                key, value = arg.split('=', 1)
+                dest = preload_options.get(key)
+                if dest:
+                    acc[dest] = value
+        return acc
 
     def get_cls_by_name(self, name):
         from astral.utils import get_cls_by_name, import_from_cwd
@@ -84,3 +118,6 @@ class Command(object):
         argv, cargs = argv[:cargs_start], argv[cargs_start + 1:]
         self.node.config_from_cmdline(cargs, namespace=self.namespace)
         return argv
+
+    def _get_default_node(self, *args, **kwargs):
+        return astral.node.Node(*args, **kwargs)

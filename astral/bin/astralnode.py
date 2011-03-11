@@ -3,15 +3,14 @@
 
 .. program:: astralnode
 
-.. cmdoption:: -s, --settings
+.. cmdoption:: -c, --config
 
-    Path to Astral node settings file 
+    Path to Astral node config module 
 
 """
 from optparse import make_option as Option
 
 from astral.bin.base import Command
-from astral.node import Node
 
 class NodeCommand(Command):
     namespace = "astralnode"
@@ -19,20 +18,20 @@ class NodeCommand(Command):
     supports_args = False
 
     def run(self, *args, **kwargs):
-        self.node = Node(**kwargs)
-        self.node.run()
+        self.node.run(**kwargs)
 
     def get_options(self):
-        settings = self.node.settings
+        conf = self.node.conf
         return (
-            Option('-s', '--settings',
-                default=settings.ASTRAL_SETTINGS_MODULE,
-                action="store", dest="settings_module",
-                help="Name of the settings module to import"),
+            Option('-s', '--something',
+                default=conf.ASTRAL_SOME_SETTING,
+                action="store", dest="some_setting",
+                help="A setting"),
         )
 
 def main():
-    pass
+    node = NodeCommand()
+    node.execute_from_commandline()
 
 if __name__ == "__main__":
     main()

@@ -15,6 +15,9 @@ setup(name='astral',
       url='http://github.com/peplin/astral',
       test_suite='nose.collector',
       setup_requires=['nose>=0.11', 'unittest>=0.5.1'],
+      install_requires=[
+          'tornado>=1.2.1',
+      ],
       packages=find_packages(),
       entry_points={
           'console_scripts': [
