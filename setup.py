@@ -17,6 +17,7 @@ setup(name='astral',
       setup_requires=['nose>=0.11', 'unittest>=0.5.1'],
       install_requires=[
           'tornado>=1.2.1',
+          'importlib>=1.0.2',
       ],
       packages=find_packages(),
       entry_points={

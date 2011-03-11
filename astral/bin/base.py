@@ -10,7 +10,7 @@ import sys
 
 from optparse import OptionParser, make_option as Option
 
-import astral
+import astral.node
 
 
 class Command(object):
@@ -18,21 +18,17 @@ class Command(object):
     args = ''
     version = astral.__version__
     option_list = ()
-    supports_args = True
-    enable_config_from_cmdline = False
-    namespace = "astral"
     preload_options = (
-            Option("--config",
-                    default="astralconfig", action="store",
-                    dest="config_module",
-                    help="Name of the module to read configuration from."),
+            Option("-s", "--settings",
+                    default="astralsettings", action="store",
+                    dest="settings_module",
+                    help="Name of the module to read settings from."),
     )
 
     Parser = OptionParser
 
-    def __init__(self, node=None, get_node=None):
-        self.node = node
-        self.get_node = get_node or self._get_default_node
+    def __init__(self):
+        self.node = astral.node.Node()
 
     def usage(self):
         return "%%prog [options] %s" % (self.args, )
@@ -42,12 +38,11 @@ class Command(object):
 
     def handle_argv(self, prog_name, argv):
         options, args = self.parse_options(prog_name, argv)
-        if not self.supports_args and args:
-            sys.stderr.write(
-                "\nUnrecognized command line arguments: %r\n" % (
-                    ", ".join(args), ))
-            sys.stderr.write("\nTry --help?\n")
-            sys.exit(1)
+        settings_module = options.settings_module
+        if settings_module:
+            os.environ["ASTRAL_SETTINGS_MODULE"] = settings_module
+        else:
+            os.environ["ASTRAL_SETTINGS_MODULE"] = 'astral.conf.global_settings'
         return self.run(*args, **vars(options))
 
     def run(self, *args, **options):
@@ -56,7 +51,6 @@ class Command(object):
     def execute_from_commandline(self, argv=None):
         if argv is None:
             argv = list(sys.argv)
-        argv = self.setup_node_from_commandline(argv)
         prog_name = os.path.basename(argv[0])
         return self.handle_argv(prog_name, argv[1:])
 
@@ -77,47 +71,3 @@ class Command(object):
                            version=self.version,
                            option_list=(self.preload_options +
                                         self.get_options()))
-
-    def setup_node_from_commandline(self, argv):
-        preload_options = self.parse_preload_options(argv)
-        node = (preload_options.pop("node", None) or
-               os.environ.get("ASTRAL_NODE") or
-               self.node)
-        config_module = preload_options.pop("config_module", None)
-        if config_module:
-            os.environ["ASTRAL_CONFIG_MODULE"] = config_module
-        if node:
-            self.node = self.get_cls_by_name(node)
-        else:
-            self.node = self.get_node()
-        if self.enable_config_from_cmdline:
-            argv = self.process_cmdline_config(argv)
-        return argv
-
-    def parse_preload_options(self, args):
-        acc = {}
-        preload_options = dict((opt._long_opts[0], opt.dest)
-                                for opt in self.preload_options)
-        for arg in args:
-            if arg.startswith('--') and '=' in arg:
-                key, value = arg.split('=', 1)
-                dest = preload_options.get(key)
-                if dest:
-                    acc[dest] = value
-        return acc
-
-    def get_cls_by_name(self, name):
-        from astral.utils import get_cls_by_name, import_from_cwd
-        return get_cls_by_name(name, imp=import_from_cwd)
-
-    def process_cmdline_config(self, argv):
-        try:
-            cargs_start = argv.index('--')
-        except ValueError:
-            return argv
-        argv, cargs = argv[:cargs_start], argv[cargs_start + 1:]
-        self.node.config_from_cmdline(cargs, namespace=self.namespace)
-        return argv
-
-    def _get_default_node(self, *args, **kwargs):
-        return astral.node.Node(*args, **kwargs)

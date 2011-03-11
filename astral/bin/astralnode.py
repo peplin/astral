@@ -3,7 +3,7 @@
 
 .. program:: astralnode
 
-.. cmdoption:: -c, --config
+.. cmdoption:: -f, --foobar
 
     Path to Astral node config module 
 
@@ -13,18 +13,13 @@ from optparse import make_option as Option
 from astral.bin.base import Command
 
 class NodeCommand(Command):
-    namespace = "astralnode"
-    enable_config_from_cmdline = True
-    supports_args = False
-
     def run(self, *args, **kwargs):
         self.node.run(**kwargs)
 
     def get_options(self):
-        conf = self.node.conf
         return (
-            Option('-s', '--something',
-                default=conf.ASTRAL_SOME_SETTING,
+            Option('-f', '--foobar',
+                default="some value",
                 action="store", dest="some_setting",
                 help="A setting"),
         )
