@@ -11,23 +11,27 @@ import sys
 from optparse import OptionParser, make_option as Option
 
 import astral.node
+from astral.daemon import Daemon
 
 
-class Command(object):
+class Command(Daemon):
     """Inspired by the Celery project's command line tools."""
     args = ''
     version = astral.__version__
     option_list = ()
-    preload_options = (
+    base_options = (
             Option("-s", "--settings",
                     default="astral.conf.global_settings", action="store",
                     dest="settings_module",
                     help="Name of the module to read settings from."),
+            Option("-D", "--daemonize", action="store",
+                    dest="daemonize", help="Daemonize the application"),
     )
 
     Parser = OptionParser
 
     def __init__(self):
+        super(Command, self).__init__('/tmp/astral.pid')
         self.node = astral.node.Node()
 
     def usage(self):
@@ -41,7 +45,15 @@ class Command(object):
         settings_module = options.settings_module
         if settings_module:
             os.environ["ASTRAL_SETTINGS_MODULE"] = settings_module
-        return self.run(*args, **vars(options))
+        daemonize = options.daemonize
+        if 'start' == daemonize:
+                self.start()
+        elif 'stop' == daemonize:
+                self.stop()
+        elif 'restart' == daemonize:
+                self.restart()
+        else:
+            return self.run(*args, **vars(options))
 
     def run(self, *args, **options):
         raise NotImplementedError("subclass responsibility")
@@ -67,5 +79,5 @@ class Command(object):
         return self.Parser(prog=prog_name,
                            usage=self.usage(),
                            version=self.version,
-                           option_list=(self.preload_options +
+                           option_list=(self.base_options +
                                         self.get_options()))
