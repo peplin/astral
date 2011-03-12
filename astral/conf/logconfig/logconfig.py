@@ -2,6 +2,7 @@
 https://github.com/jbalogh/zamboni/blob/master/log_settings.py
 """
 from tornado.options import _LogFormatter as TornadoLogFormatter
+import tornado.options
 import sys
 import logging, logging.handlers
 import os.path
@@ -96,6 +97,8 @@ def initialize_logging(log_config):
             },
         },
         'loggers': {
+            # root logger
+            '': {}
         }
     }
 

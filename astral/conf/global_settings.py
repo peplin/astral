@@ -1,10 +1,13 @@
 import logging
 import logging.handlers
 
-DEBUG = False
+DEBUG = True
 
 LOG_FORMAT = '[%(asctime)s: %(levelname)s] %(message)s'
-LOG_LEVEL = logging.WARN
+if DEBUG:
+    LOG_LEVEL = logging.DEBUG
+else:
+    LOG_LEVEL = logging.WARN
 LOG_COLOR = True
 
 TORNADO_SETTINGS = {}
