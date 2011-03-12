@@ -6,6 +6,7 @@ Node Base Class.
 
 """
 import astral.api
+import astral.models
 
 class Node(object):
     def __init__(self):
