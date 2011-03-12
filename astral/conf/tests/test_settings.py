@@ -8,4 +8,4 @@ os.environ["ASTRAL_SETTINGS_MODULE"] = 'astral.conf.global_settings'
 
 class SettingsTest(unittest2.TestCase):
     def test_global_setting(self):
-        eq_(settings.DEBUG, False)
+        eq_(settings.DEBUG, True)
