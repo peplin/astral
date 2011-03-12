@@ -9,10 +9,11 @@ Borrowed from Django.
 """
 
 import os
+import sys
+import importlib
 
 from astral.conf import global_settings
 from astral.utils.functional import LazyObject
-import importlib
 
 ENVIRONMENT_VARIABLE = "ASTRAL_SETTINGS_MODULE"
 

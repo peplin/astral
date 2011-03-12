@@ -20,7 +20,7 @@ class Command(object):
     option_list = ()
     preload_options = (
             Option("-s", "--settings",
-                    default="astralsettings", action="store",
+                    default="astral.conf.global_settings", action="store",
                     dest="settings_module",
                     help="Name of the module to read settings from."),
     )
@@ -41,8 +41,6 @@ class Command(object):
         settings_module = options.settings_module
         if settings_module:
             os.environ["ASTRAL_SETTINGS_MODULE"] = settings_module
-        else:
-            os.environ["ASTRAL_SETTINGS_MODULE"] = 'astral.conf.global_settings'
         return self.run(*args, **vars(options))
 
     def run(self, *args, **options):
