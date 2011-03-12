@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 
 DEBUG = False
 
@@ -9,9 +10,7 @@ LOG_COLOR = True
 TORNADO_SETTINGS = {}
 TORNADO_SETTINGS['debug'] = DEBUG
 TORNADO_SETTINGS['xsrf_cookies'] = False
-
-SYSLOG_TAG = "boilerplate"
-SYSLOG_FACILITY = logging.handlers.SysLogHandler.LOG_LOCAL2
+TORNADO_SETTINGS['port'] = 8000
 
 if DEBUG:
     LOG_LEVEL = logging.DEBUG
@@ -25,7 +24,7 @@ LOGGING = {
         'astral': {},
     },
     'syslog_facility': logging.handlers.SysLogHandler.LOG_LOCAL0,
-    'syslog_tag': "bueda",
+    'syslog_tag': "astral",
     'log_level': LOG_LEVEL,
     'use_syslog': USE_SYSLOG,
 }
