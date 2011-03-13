@@ -31,3 +31,5 @@ LOGGING = {
     'log_level': LOG_LEVEL,
     'use_syslog': USE_SYSLOG,
 }
+
+ASTRAL_WEBSERVER = "http://localhost:4567"

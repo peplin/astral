@@ -9,7 +9,6 @@ Borrowed from Django.
 """
 
 import os
-import sys
 import importlib
 
 from astral.conf import global_settings

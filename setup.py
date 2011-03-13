@@ -20,6 +20,7 @@ setup(name='astral',
           'importlib>=1.0.2',
           'sqlalchemy>=0.6.6',
           'Elixir>=0.7.1',
+          'restkit>=3.2.0',
       ],
       packages=find_packages(),
       entry_points={
