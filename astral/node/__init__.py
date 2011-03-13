@@ -5,4 +5,4 @@ astral.node
 Astral Node.
 
 """
-from base import Node
+from base import LocalNode

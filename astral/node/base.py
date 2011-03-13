@@ -8,7 +8,7 @@ Node Base Class.
 import threading
 
 import astral.api
-import astral.models
+from astral.models import Node
 from astral.conf import settings
 from astral.exceptions import OriginWebserverError
 from astral.api.client import Nodes
@@ -16,7 +16,7 @@ from astral.api.client import Nodes
 import logging
 log = logging.getLogger(__name__)
 
-class Node(object):
+class LocalNode(object):
     def __init__(self):
         pass
 
@@ -38,13 +38,15 @@ class Node(object):
                 log.exception(e)
             else:
                 log.debug("Nodes returned from the web server: %s", nodes)
+                nodes = [Node.from_json(node) for node in nodes]
+
 
     class DaemonThread(threading.Thread):
         """Background thread for garbage collection and other periodic tasks
         outside the scope of the web API.
         """
         def __init__(self):
-            super(Node.DaemonThread, self).__init__()
+            super(LocalNode.DaemonThread, self).__init__()
             self.daemon = True
 
         def run(self):

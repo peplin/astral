@@ -32,7 +32,7 @@ class Command(Daemon):
 
     def __init__(self):
         super(Command, self).__init__('/tmp/astral.pid')
-        self.node = astral.node.Node()
+        self.node = astral.node.LocalNode()
 
     def usage(self):
         return "%%prog [options] %s" % (self.args, )
