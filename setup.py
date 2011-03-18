@@ -1,7 +1,6 @@
 import astral
 import os
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import find_packages, setup
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 long_description = open(os.path.join(ROOT_PATH, 'README.rst')).read()
@@ -14,7 +13,7 @@ setup(name='astral',
       author_email='astral@bueda.com',
       url='http://github.com/peplin/astral',
       test_suite='nose.collector',
-      setup_requires=['nose>=0.11', 'unittest>=0.5.1'],
+      setup_requires=['nose>=0.11', 'unittest2>=0.5.1'],
       install_requires=[
           'tornado>=1.2.1',
           'importlib>=1.0.2',
