@@ -16,10 +16,8 @@ from astral.api.client import Nodes
 import logging
 log = logging.getLogger(__name__)
 
-class LocalNode(object):
-    def __init__(self):
-        pass
 
+class LocalNode(object):
     def run(self, **kwargs):
         # TODO have to trigger loading of the settings with this, otherwise we
         # have a race condition between the threads and an exception can occur -
@@ -31,7 +29,13 @@ class LocalNode(object):
 
     class BootstrapThread(threading.Thread):
         """Runs once at node startup to build knowledge of the network."""
-        def run(self):
+        def load_static_bootstrap_nodes(self):
+            log.info("Loading static bootstrap nodes %s",
+                    settings.BOOTSTRAP_NODES)
+            nodes = [Node.from_json(node) for node in settings.BOOTSTRAP_NODES]
+            log.debug("Loaded static bootstrap nodes %s", nodes)
+
+        def load_dynamic_bootstrap_nodes(self):
             try:
                 nodes = Nodes().get()
             except OriginWebserverError, e:
@@ -39,6 +43,11 @@ class LocalNode(object):
             else:
                 log.debug("Nodes returned from the web server: %s", nodes)
                 nodes = [Node.from_json(node) for node in nodes]
+
+        def run(self):
+            self.load_static_bootstrap_nodes()
+            self.load_dynamic_bootstrap_nodes()
+            # TODO find the closests supernode, POST ourselves to it
 
 
     class DaemonThread(threading.Thread):
