@@ -37,7 +37,7 @@ class LocalNode(object):
 
         def load_dynamic_bootstrap_nodes(self):
             try:
-                nodes = Nodes().get()
+                nodes = Nodes(settings.ASTRAL_WEBSERVER).get()
             except OriginWebserverError, e:
                 log.exception(e)
             else:

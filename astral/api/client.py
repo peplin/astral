@@ -1,15 +1,12 @@
 import restkit
 import json
 
-from astral.conf import settings
 from astral.exceptions import OriginWebserverError
 
-class Nodes(restkit.Resource):
-    def __init__(self, **kwargs):
-        super(Nodes, self).__init__(settings.ASTRAL_WEBSERVER, **kwargs)
 
-    def get(self, query=None):
-        return super(Nodes, self).get('/nodes', query)
+class NodeAPI(restkit.Resource):
+    def __init__(self, base_url, **kwargs):
+        super(NodeAPI, self).__init__(base_url, **kwargs)
 
     def make_headers(self, headers):
         return headers or {'Accept': 'application/json'}
@@ -21,3 +18,15 @@ class Nodes(restkit.Resource):
             raise OriginWebserverError(e)
         else:
             return json.loads(response.body_string())
+
+    def ping(self):
+        return self.get('/ping')
+
+
+class Nodes(restkit.Resource):
+    def get(self, query=None):
+        return super(Nodes, self).get('/nodes', query)
+
+class Streams(restkit.Resource):
+    def get(self, query=None):
+        return super(Nodes, self).get('/streams', query)

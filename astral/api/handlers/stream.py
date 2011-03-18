@@ -9,10 +9,9 @@ class StreamHandler(BaseHandler):
         """Return whether or not this node can forward the stream requested to
         the requesting node, and start doing so if it can."""
         # TODO
-        
+
     def get(self):
         """Return metadata for the stream."""
-        # TODO
         # TODO could require target nodes to hit this every so often as a
         # heartbeat
         # TODO if this GET is metadata, what's the endpoint for the actual
