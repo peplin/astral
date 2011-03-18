@@ -34,3 +34,5 @@ LOGGING = {
 
 ASTRAL_WEBSERVER = "http://localhost:4567"
 BOOTSTRAP_NODES = [{'ip_address': "127.0.0.1", 'port': 8001},]
+
+BANDWIDTH_CHECK_SIZE_LIMIT = 1024 * 2 

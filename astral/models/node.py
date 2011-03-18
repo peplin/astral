@@ -1,28 +1,37 @@
 from elixir import Entity, Field, Unicode, Integer
-import timeit
+
+from astral.api.client import NodeAPI
 
 
 class Node(Entity):
     ip_address = Field(Unicode(15))
     port = Field(Integer)
     rtt = Field(Integer)
+    upstream = Field(Integer)
+    downstream = Field(Integer)
 
     RTT_STEP = 0.2
+    BANDWIDTH_STEP = 0.2
 
     @classmethod
     def from_json(cls, data):
         return cls(ip_address=data['ip_address'])
 
     def update_rtt(self):
-        timer = timeit.Timer("NodeAPI('%s').ping()" % self.uri(),
-                "from astral.api.client import NodeAPI")
-        sampled_rtt = timer.timeit(1)
-        if not self.rtt:
-            self.rtt = sampled_rtt
-        else:
-            self.rtt = ((1 - self.RTT_STEP) * self.rtt
-                    + self.RTT_STEP * sampled_rtt)
+        sampled_rtt = NodeAPI(self.uri()).ping()
+        self.rtt = self._weighted_average(self.rtt, self.RTT_STEP, sampled_rtt)
         return self.rtt
+
+    def update_downstream(self):
+        byte_count, transfer_time = NodeAPI(self.uri()).downstream_check()
+        self.downstream = self._weighted_average(self.downstream,
+                self.BANDWIDTH_STEP, byte_count / transfer_time)
+        return self.downstream
+
+    def _weighted_average(self, estimated, step, sample):
+        if not estimated:
+            return sample
+        return (1 - step) * estimated + step * sample
 
     def uri(self):
         return "%s:%s" % (self.ip_address, self.port)
