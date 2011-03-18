@@ -4,6 +4,7 @@ from elixir import Entity, Field, Unicode
 class Node(Entity):
     ip_address = Field(Unicode(15))
 
+    @classmethod
     def from_json(cls, data):
         return cls(ip_address=data['ip_address'])
 
