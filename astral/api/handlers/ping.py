@@ -11,11 +11,12 @@ class PingHandler(BaseHandler):
         random bytes (for the purposes of a downstream bandwidth measurement).
         Otherwise, returns a simple 200 OK HTTP response, to check the RTT.
         """
-        byte_count = self.get_argument('bytes')
+        byte_count = self.get_argument('bytes', None)
         if byte_count:
+            byte_count = int(byte_count)
             log.debug("Returning %s bytes for a downstream bandwidth test",
                     byte_count)
-            with open('/dev/random') as random_file:
+            with open('/dev/urandom') as random_file:
                 self.write(random_file.read(
                     max(byte_count, settings.DOWNSTREAM_CHECK_LIMIT)))
         else:
@@ -27,4 +28,4 @@ class PingHandler(BaseHandler):
         size to make sure we aren't DoS'd.
         """
         log.debug("Received an upstream bandwidth check with %s bytes",
-                len(self.get_argument("bytes")))
+                len(self.request.body))

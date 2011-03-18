@@ -36,8 +36,8 @@ class NodeAPI(restkit.Resource):
     def upstream_check(self, byte_count=None):
         byte_count = byte_count or settings.UPSTREAM_CHECK_LIMIT
         payload = {}
-        with open('/dev/random') as random_file:
-            payload['bytes'] = random_file.read(byte_count)
+        payload['bytes'] = ''.join((random.choice(string.ascii_letters)
+                for _ in range(byte_count)))
         timer = timeit.Timer("NodeAPI('%s').post('/ping', payload=%s)"
                 % (self.uri, json.dumps(payload)),
                 "from astral.api.client import NodeAPI")
