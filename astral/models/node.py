@@ -28,13 +28,19 @@ class Node(Entity):
                 self.BANDWIDTH_STEP, byte_count / transfer_time)
         return self.downstream
 
+    def update_upstream(self):
+        byte_count, transfer_time = NodeAPI(self.uri()).upstream_check()
+        self.upstream = self._weighted_average(self.upstream,
+                self.BANDWIDTH_STEP, byte_count / transfer_time)
+        return self.upstream
+
     def _weighted_average(self, estimated, step, sample):
         if not estimated:
             return sample
         return (1 - step) * estimated + step * sample
 
     def uri(self):
-        return "%s:%s" % (self.ip_address, self.port)
+        return "http://%s:%s" % (self.ip_address, self.port)
 
     def __repr__(self):
         return u'<Node %s>' % self.ip_address

@@ -2,7 +2,7 @@ from astral.api.handlers.base import BaseHandler
 from astral.conf import settings
 
 import logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class PingHandler(BaseHandler):
@@ -13,6 +13,18 @@ class PingHandler(BaseHandler):
         """
         byte_count = self.get_argument('bytes')
         if byte_count:
+            log.debug("Returning %s bytes for a downstream bandwidth test",
+                    byte_count)
             with open('/dev/random') as random_file:
                 self.write(random_file.read(
-                    max(byte_count, settings.BANDWIDTH_CHECK_SIZE_LIMIT)))
+                    max(byte_count, settings.DOWNSTREAM_CHECK_LIMIT)))
+        else:
+            self.write("Pong!")
+            log.debug("Responded to a ping")
+
+    def post(self):
+        """Accept arbitrary POST data to check upstream bandwidth. Limit the
+        size to make sure we aren't DoS'd.
+        """
+        log.debug("Received an upstream bandwidth check with %s bytes",
+                len(self.get_argument("bytes")))

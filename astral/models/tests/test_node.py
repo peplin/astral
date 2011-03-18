@@ -1,13 +1,13 @@
-import unittest2 
 from nose.tools import ok_, eq_, raises
 import mockito
 import restkit
 
 from astral.models.node import Node
 from astral.api.client import NodeAPI
+from astral.api.tests import BaseTest
 
 
-class NodeRTTTest(unittest2.TestCase):
+class NodeRTTTest(BaseTest):
     def setUp(self):
         super(NodeRTTTest, self).setUp()
         self.node = Node(ip_address='localhost', port='8000')
@@ -32,7 +32,8 @@ class NodeRTTTest(unittest2.TestCase):
         ok_(rtt < 100)
         ok_(rtt > 10)
 
-class NodeDownstreamTest(unittest2.TestCase):
+
+class NodeDownstreamTest(BaseTest):
     def setUp(self):
         super(NodeDownstreamTest, self).setUp()
         self.node = Node(ip_address='localhost', port='8000')
@@ -57,3 +58,30 @@ class NodeDownstreamTest(unittest2.TestCase):
         downstream = self.node.update_downstream()
         ok_(downstream < 100)
         ok_(downstream > 10)
+
+
+class NodeUpstreamTest(BaseTest):
+    def setUp(self):
+        super(NodeUpstreamTest, self).setUp()
+        self.node = Node(ip_address='localhost', port='8000')
+
+    @raises(restkit.RequestError)
+    def test_update_upstream_error(self):
+        mockito.when(NodeAPI).upstream_check().thenRaise(
+                restkit.RequestError())
+        upstream = self.node.update_upstream()
+        eq_(upstream, None)
+
+    def test_update_upstream(self):
+        mockito.when(NodeAPI).upstream_check().thenReturn((100, 10.0))
+        eq_(self.node.upstream, None)
+        upstream = self.node.update_upstream()
+        eq_(upstream, 100 / 10.0)
+        eq_(self.node.upstream, upstream)
+
+    def test_weighted_upstream(self):
+        mockito.when(NodeAPI).upstream_check().thenReturn((100, 10.0))
+        self.node.upstream = 100
+        upstream = self.node.update_upstream()
+        ok_(upstream < 100)
+        ok_(upstream > 10)

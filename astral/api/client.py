@@ -7,8 +7,8 @@ from astral.exceptions import OriginWebserverError
 
 
 class NodeAPI(restkit.Resource):
-    def __init__(self, base_uri, **kwargs):
-        super(NodeAPI, self).__init__(base_uri, **kwargs)
+    def __init__(self, uri, **kwargs):
+        super(NodeAPI, self).__init__(uri, **kwargs)
 
     def make_headers(self, headers):
         return headers or {'Accept': 'application/json'}
@@ -22,14 +22,24 @@ class NodeAPI(restkit.Resource):
             return json.loads(response.body_string())
 
     def ping(self):
-        timer = timeit.Timer("NodeAPI('%s').get('/ping')" % self.base_uri,
+        timer = timeit.Timer("NodeAPI('%s').get('/ping')" % self.uri,
                 "from astral.api.client import NodeAPI")
         return timer.timeit(1)
 
     def downstream_check(self, byte_count=None):
-        byte_count = byte_count or settings.BANDWIDTH_CHECK_SIZE_LIMIT
+        byte_count = byte_count or settings.DOWNSTREAM_CHECK_LIMIT
         timer = timeit.Timer("NodeAPI('%s').get('/ping', {'bytes': %s})"
-                % (self.base_uri, byte_count),
+                % (self.uri, byte_count),
+                "from astral.api.client import NodeAPI")
+        return byte_count, timer.timeit(1)
+
+    def upstream_check(self, byte_count=None):
+        byte_count = byte_count or settings.UPSTREAM_CHECK_LIMIT
+        payload = {}
+        with open('/dev/random') as random_file:
+            payload['bytes'] = random_file.read(byte_count)
+        timer = timeit.Timer("NodeAPI('%s').post('/ping', payload=%s)"
+                % (self.uri, json.dumps(payload)),
                 "from astral.api.client import NodeAPI")
         return byte_count, timer.timeit(1)
 
