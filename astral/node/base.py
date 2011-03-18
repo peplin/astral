@@ -48,6 +48,7 @@ class LocalNode(object):
             self.load_static_bootstrap_nodes()
             self.load_dynamic_bootstrap_nodes()
             # TODO find the closests supernode, POST ourselves to it
+            # TODO ask it for other supernodes and store them
 
 
     class DaemonThread(threading.Thread):
