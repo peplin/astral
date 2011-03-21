@@ -5,6 +5,7 @@ from astral.api.client import NodeAPI
 
 class Node(Entity):
     ip_address = Field(Unicode(15))
+    uuid = Field(Integer)
     port = Field(Integer)
     rtt = Field(Integer)
     upstream = Field(Integer)
@@ -41,6 +42,9 @@ class Node(Entity):
 
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
+
+    def absolute_url(self):
+        return '/node/%s' % self.uuid
 
     def __repr__(self):
         return u'<Node %s>' % self.ip_address
