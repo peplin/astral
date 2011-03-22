@@ -10,9 +10,8 @@ logger = logging.getLogger(__name__)
 class StreamsHandler(BaseHandler):
     def get(self):
         """Return a JSON list of streams that this node can forward."""
-        streams = Stream.query.all()
-        self.write(json.dumps(
-                {'streams': [stream.to_dict() for stream in streams]}))
+        self.write(json.dumps({'streams': [stream.to_dict()
+            for stream in Stream.query.all()]}))
 
     def post(self):
         """Register a new available stream."""

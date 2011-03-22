@@ -13,6 +13,7 @@ class Node(Entity):
 
     RTT_STEP = 0.2
     BANDWIDTH_STEP = 0.2
+    API_FIELDS = ['ip_address', 'uuid', 'port',]
 
     @classmethod
     def from_json(cls, data):
@@ -45,6 +46,10 @@ class Node(Entity):
 
     def absolute_url(self):
         return '/node/%s' % self.uuid
+
+    def to_dict(self):
+        return dict(((field, getattr(self, field))
+                for field in self.API_FIELDS))
 
     def __repr__(self):
         return u'<Node %s>' % self.ip_address
