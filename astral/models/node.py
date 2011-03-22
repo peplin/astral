@@ -1,9 +1,10 @@
-from elixir import Entity, Field, Unicode, Integer
+from elixir import Field, Unicode, Integer, Entity
 
+from astral.models.base import BaseEntityMixin
 from astral.api.client import NodeAPI
 
 
-class Node(Entity):
+class Node(BaseEntityMixin, Entity):
     ip_address = Field(Unicode(15))
     uuid = Field(Integer)
     port = Field(Integer)

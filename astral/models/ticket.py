@@ -1,7 +1,9 @@
-from elixir import Entity, ManyToOne
+from elixir import ManyToOne, Entity
+
+from astral.models.base import BaseEntityMixin
 
 
-class Ticket(Entity):
+class Ticket(BaseEntityMixin, Entity):
     node = ManyToOne('Node')
     stream = ManyToOne('Stream')
 
