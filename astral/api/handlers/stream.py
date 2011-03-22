@@ -1,7 +1,7 @@
 import json
 
 from astral.api.handlers.base import BaseHandler
-from astral.models import Ticket, Node, Stream
+from astral.models import Ticket, Node, Stream, session
 
 import logging
 logger = logging.getLogger(__name__)
@@ -11,7 +11,15 @@ class StreamHandler(BaseHandler):
     def post(self, stream_id):
         """Return whether or not this node can forward the stream requested to
         the requesting node, and start doing so if it can."""
-        # TODO
+        # TODO observe some cap on the number of tickets, based on bandwidth
+        stream = Stream.get_by(id=stream_id)
+        node = Node.get_by(ip_address=self.request.remote_ip)
+        if not node:
+            # TODO raise an error
+            pass
+        Ticket(stream=stream, node=node)
+        session.commit()
+        self.get(stream_id)
 
     def get(self, stream_id):
         """Return metadata for the stream."""

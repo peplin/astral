@@ -4,7 +4,8 @@ import json
 
 from astral.api.tests import BaseTest
 from astral.models import Ticket, Node, Stream
-from astral.models.tests.factories import TicketFactory, StreamFactory
+from astral.models.tests.factories import (TicketFactory, StreamFactory,
+        ThisNodeFactory)
 
 class StreamHandlerTest(BaseTest):
     def test_delete_stream_ticket(self):
@@ -25,3 +26,19 @@ class StreamHandlerTest(BaseTest):
         ok_('stream' in result)
         eq_(result['stream']['id'], stream.id)
         eq_(result['stream']['name'], stream.name)
+
+    def test_create_ticket(self):
+        ThisNodeFactory()
+        stream = StreamFactory()
+        self.http_client.fetch(HTTPRequest(
+            self.get_url(stream.absolute_url()), 'POST',
+            body=''), self.stop)
+        response = self.wait()
+        eq_(response.code, 200)
+        result = json.loads(response.body)
+        ok_('stream' in result)
+        eq_(result['stream']['id'], stream.id)
+        eq_(result['stream']['name'], stream.name)
+        ticket = Ticket.query.first()
+        eq_(ticket.stream, stream)
+        eq_(ticket.node.ip_address, '127.0.0.1')

@@ -1,4 +1,4 @@
-from elixir import setup_all, create_all, metadata, Entity
+from elixir import setup_all, create_all, metadata, Entity, session, drop_all
 
 from astral.models.node import Node
 from astral.models.stream import Stream

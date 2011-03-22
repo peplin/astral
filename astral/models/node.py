@@ -5,7 +5,7 @@ from astral.api.client import NodeAPI
 
 
 class Node(BaseEntityMixin, Entity):
-    ip_address = Field(Unicode(15))
+    ip_address = Field(Unicode(15), unique=True)
     uuid = Field(Integer)
     port = Field(Integer)
     rtt = Field(Integer)

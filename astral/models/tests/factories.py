@@ -22,6 +22,14 @@ class NodeFactory(factory.Factory):
     port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
 
 
+class ThisNodeFactory(factory.Factory):
+    FACTORY_FOR = Node
+
+    ip_address = '127.0.0.1'
+    uuid = factory.LazyAttribute(lambda a: random.randrange(1000, 1000000))
+    port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
+
+
 class TicketFactory(factory.Factory):
     node = factory.LazyAttribute(lambda a: NodeFactory())
     stream = factory.LazyAttribute(lambda a: StreamFactory())
