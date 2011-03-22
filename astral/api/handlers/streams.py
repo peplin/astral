@@ -1,4 +1,7 @@
+import json
+
 from astral.api.handlers.base import BaseHandler
+from astral.models.stream import Stream
 
 import logging
 logger = logging.getLogger(__name__)
@@ -7,8 +10,9 @@ logger = logging.getLogger(__name__)
 class StreamsHandler(BaseHandler):
     def get(self):
         """Return a JSON list of streams that this node can forward."""
-        # TODO
-        self.write({})
+        streams = Stream.query.all()
+        self.write(json.dumps(
+                {'streams': [stream.to_dict() for stream in streams]}))
 
     def post(self):
         """Register a new available stream."""
