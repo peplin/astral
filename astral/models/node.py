@@ -17,8 +17,9 @@ class Node(BaseEntityMixin, Entity):
     API_FIELDS = ['ip_address', 'uuid', 'port',]
 
     @classmethod
-    def from_json(cls, data):
-        return cls(ip_address=data['ip_address'])
+    def from_dict(cls, data):
+        return cls(ip_address=data['ip_address'], uuid=data['uuid'],
+                port=data['port'])
 
     def update_rtt(self):
         sampled_rtt = NodeAPI(self.uri()).ping()

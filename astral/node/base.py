@@ -32,7 +32,7 @@ class LocalNode(object):
         def load_static_bootstrap_nodes(self):
             log.info("Loading static bootstrap nodes %s",
                     settings.BOOTSTRAP_NODES)
-            nodes = [Node.from_json(node) for node in settings.BOOTSTRAP_NODES]
+            nodes = [Node.from_dict(node) for node in settings.BOOTSTRAP_NODES]
             log.debug("Loaded static bootstrap nodes %s", nodes)
 
         def load_dynamic_bootstrap_nodes(self):
@@ -43,7 +43,7 @@ class LocalNode(object):
                 log.exception(e)
             else:
                 log.debug("Nodes returned from the web server: %s", nodes)
-                nodes = [Node.from_json(node) for node in nodes]
+                nodes = [Node.from_dict(node) for node in nodes]
 
         def run(self):
             self.load_static_bootstrap_nodes()
