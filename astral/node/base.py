@@ -19,10 +19,6 @@ log = logging.getLogger(__name__)
 
 class LocalNode(object):
     def run(self, **kwargs):
-        # TODO have to trigger loading of the settings with this, otherwise we
-        # have a race condition between the threads and an exception can occur -
-        # how can we protect the settings, specifically the log configuration?
-        settings.ASTRAL_WEBSERVER
         self.BootstrapThread().start()
         self.DaemonThread().start()
         astral.api.run()

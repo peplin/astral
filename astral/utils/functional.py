@@ -1,5 +1,7 @@
 """Borrowed from Django."""
 
+from threading import Lock
+
 class LazyObject(object):
     """
     A wrapper for another class that can be used to delay instantiation of the
@@ -10,16 +12,19 @@ class LazyObject(object):
     """
     def __init__(self):
         self._wrapped = None
+        self._lock = Lock()
 
     def __getattr__(self, name):
+        self._lock.acquire()
         if self._wrapped is None:
             self._setup()
+        self._lock.release()
         return getattr(self._wrapped, name)
 
     def __setattr__(self, name, value):
-        if name == "_wrapped":
+        if name in ["_wrapped", "_lock"]:
             # Assign to __dict__ to avoid infinite __setattr__ loops.
-            self.__dict__["_wrapped"] = value
+            self.__dict__[name] = value
         else:
             if self._wrapped is None:
                 self._setup()
