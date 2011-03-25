@@ -1,8 +1,9 @@
 from astral.api.handlers.base import BaseHandler
 from astral.models.node import Node
+from astral.api.client import Nodes
 
 import logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class NodeHandler(BaseHandler):
@@ -10,5 +11,10 @@ class NodeHandler(BaseHandler):
         """Remove the requesting node from the list of known nodes,
         unregistering the from the network.
         """
-        Node.get_by(uuid=uuid).delete()
-        # TODO consider forwarding this data to other known nodes
+        node = Node.get_by(uuid=uuid)
+        node.delete()
+        closest_supernode = Node.closest_supernode()
+        if closest_supernode:
+            log.info("Notifying closest supernode %s that %s was deleted",
+                    closest_supernode, node)
+            Nodes(closest_supernode.absolute_url()).delete(node)

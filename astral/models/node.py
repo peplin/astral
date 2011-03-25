@@ -78,6 +78,12 @@ class Node(BaseEntityMixin, Entity):
             return sample
         return (1 - step) * estimated + step * sample
 
+    @classmethod
+    def closest_supernode(cls):
+        closest = cls.query.filter_by(supernode=True).order_by('rtt').first()
+        if not closest:
+            log.warn("No supernodes in the database")
+
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
 

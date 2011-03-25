@@ -56,6 +56,10 @@ class Nodes(NodeAPI):
     def post(self, payload=None):
         return super(Nodes, self).post('/nodes', payload=json.dumps(payload))
 
+    def delete(self, node):
+        return super(Nodes, self).delete(node.absolute_url())
+
+
 class Streams(NodeAPI):
     def get(self, query=None):
         return super(Nodes, self).get('/streams', query)
