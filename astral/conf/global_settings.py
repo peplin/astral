@@ -10,10 +10,12 @@ else:
     LOG_LEVEL = logging.WARN
 LOG_COLOR = True
 
+PORT = 8000
+
 TORNADO_SETTINGS = {}
 TORNADO_SETTINGS['debug'] = DEBUG
 TORNADO_SETTINGS['xsrf_cookies'] = False
-TORNADO_SETTINGS['port'] = 8000
+TORNADO_SETTINGS['port'] = PORT
 
 if DEBUG:
     LOG_LEVEL = logging.DEBUG

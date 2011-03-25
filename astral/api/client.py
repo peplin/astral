@@ -1,6 +1,8 @@
 import restkit
 import json
 import timeit
+import random
+import string
 
 from astral.conf import settings
 from astral.exceptions import OriginWebserverError
@@ -47,6 +49,9 @@ class NodeAPI(restkit.Resource):
 class Nodes(NodeAPI):
     def get(self, query=None):
         return super(Nodes, self).get('/nodes', query)
+
+    def post(self, query=None):
+        return super(Nodes, self).post('/nodes', query)
 
 class Streams(NodeAPI):
     def get(self, query=None):

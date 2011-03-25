@@ -1,25 +1,60 @@
-from elixir import Field, Unicode, Integer, Entity
+from elixir import Field, Unicode, Integer, Entity, Boolean, using_table_options
+from sqlalchemy import UniqueConstraint
+import uuid
+import socket
 
 from astral.models.base import BaseEntityMixin
 from astral.api.client import NodeAPI
+from astral.conf import settings
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class Node(BaseEntityMixin, Entity):
-    ip_address = Field(Unicode(15), unique=True)
-    uuid = Field(Integer)
+    ip_address = Field(Unicode(15))
+    uuid = Field(Integer, unique=True)
     port = Field(Integer)
     rtt = Field(Integer)
     upstream = Field(Integer)
     downstream = Field(Integer)
+    supernode = Field(Boolean, nullable=False, default=False)
+
+    using_table_options(UniqueConstraint('ip_address', 'port'))
 
     RTT_STEP = 0.2
     BANDWIDTH_STEP = 0.2
-    API_FIELDS = ['ip_address', 'uuid', 'port',]
+    API_FIELDS = ['ip_address', 'uuid', 'port', 'supernode',]
+
+    def __init__(self, *args, **kwargs):
+        if not kwargs.get('uuid'):
+            kwargs['uuid'] = uuid.getnode()
+            log.info("Using %s for this node's unique ID", kwargs['uuid'])
+
+        if not kwargs.get('ip_address'):
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect((settings.ASTRAL_WEBSERVER, 80))
+            except socket.gaierror, e:
+                log.debug("Couldn't connect to the Astral webserver: %s", e)
+                kwargs['ip_address'] = '127.0.0.1'
+            else:
+                kwargs['ip_address'] = s.getsockname()
+            log.info("Using %s for this node's IP address", kwargs['ip_address'])
+
+        if not kwargs.get('port'):
+            kwargs['port'] = settings.PORT
+            log.info("Using %s for this node's API port", kwargs['port'])
+
+        return super(Node, self).__init__(*args, **kwargs)
 
     @classmethod
     def from_dict(cls, data):
-        return cls(ip_address=data['ip_address'], uuid=data['uuid'],
-                port=data['port'])
+        node = Node.get_by(uuid=data['uuid'])
+        if not node:
+            node = cls(ip_address=data['ip_address'], uuid=data['uuid'],
+                    port=data['port'], supernode=data.get('supernode', False))
+        return node
 
     def update_rtt(self):
         sampled_rtt = NodeAPI(self.uri()).ping()
@@ -54,4 +89,4 @@ class Node(BaseEntityMixin, Entity):
                 for field in self.API_FIELDS))
 
     def __repr__(self):
-        return u'<Node %s>' % self.ip_address
+        return u'<Node %s:%d>' % (self.ip_address, self.port)
