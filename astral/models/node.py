@@ -12,13 +12,13 @@ log = logging.getLogger(__name__)
 
 
 class Node(BaseEntityMixin, Entity):
-    ip_address = Field(Unicode(15))
-    uuid = Field(Integer, unique=True)
-    port = Field(Integer)
+    ip_address = Field(Unicode(15), nullable=False)
+    uuid = Field(Integer, nullable=False, unique=True)
+    port = Field(Integer, nullable=False)
+    supernode = Field(Boolean, nullable=False, default=False)
     rtt = Field(Integer)
     upstream = Field(Integer)
     downstream = Field(Integer)
-    supernode = Field(Boolean, nullable=False, default=False)
 
     using_table_options(UniqueConstraint('ip_address', 'port'))
 

@@ -13,7 +13,8 @@ class NodeAPI(restkit.Resource):
         super(NodeAPI, self).__init__(uri, **kwargs)
 
     def make_headers(self, headers):
-        return headers or {'Accept': 'application/json'}
+        return headers or {'Accept': 'application/json',
+                'Content-Type': 'application/json'}
 
     def request(self, *args, **kwargs):
         try:
@@ -21,7 +22,9 @@ class NodeAPI(restkit.Resource):
         except restkit.RequestError, e:
             raise OriginWebserverError(e)
         else:
-            return json.loads(response.body_string())
+            body = response.body_string()
+            if body:
+                return json.loads(body)
 
     def ping(self):
         timer = timeit.Timer("NodeAPI('%s').get('/ping')" % self.uri,
@@ -50,8 +53,8 @@ class Nodes(NodeAPI):
     def get(self, query=None):
         return super(Nodes, self).get('/nodes', query)
 
-    def post(self, query=None):
-        return super(Nodes, self).post('/nodes', query)
+    def post(self, payload=None):
+        return super(Nodes, self).post('/nodes', payload=json.dumps(payload))
 
 class Streams(NodeAPI):
     def get(self, query=None):

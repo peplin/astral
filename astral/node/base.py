@@ -29,6 +29,7 @@ class LocalNode(object):
     def load_this_node(self):
         if not getattr(self, 'node', None):
             self.node = Node()
+            session.commit()
 
     class BootstrapThread(threading.Thread):
         """Runs once at node startup to build knowledge of the network."""
@@ -57,15 +58,16 @@ class LocalNode(object):
         def register_with_supernode(self):
             supernodes = Node.query.filter_by(supernode=True)
             if supernodes.count() == 0:
-                Nodes(settings.ASTRAL_WEBSERVER).post(self.node.to_dict())
                 self.node.supernode = True
+                Nodes(settings.ASTRAL_WEBSERVER).post(self.node.to_dict())
                 closest_supernode = self.node
             else:
                 for supernode in supernodes:
                     supernode.update_rtt()
                 closest_supernode = min(supernodes, key=lambda n: n.rtt)
-            Nodes(closest_supernode.absolute_url()).post(self.to_dict())
-            self.load_dynamic_bootstrap_nodes(closest_supernode.absolute_url())
+                Nodes(closest_supernode.absolute_url()).post(
+                        self.node.to_dict())
+                self.load_dynamic_bootstrap_nodes(closest_supernode.absolute_url())
             session.commit()
 
         def run(self):
