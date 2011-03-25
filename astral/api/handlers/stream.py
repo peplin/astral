@@ -12,6 +12,7 @@ class StreamHandler(BaseHandler):
     def post(self, stream_id):
         """Return whether or not this node can forward the stream requested to
         the requesting node, and start doing so if it can."""
+        # TODO See LH #35
         # TODO observe some cap on the number of tickets, based on bandwidth
         stream = Stream.get_by(id=stream_id)
         node = Node.get_by(ip_address=self.request.remote_ip)
