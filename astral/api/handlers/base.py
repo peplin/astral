@@ -54,6 +54,9 @@ class BaseHandler(tornado.web.RequestHandler):
         if isinstance(chunk, dict):
             chunk = escape.json_encode(chunk)
             self.set_header("Content-Type", "application/json")
+            callback = self.get_argument('callback', None)
+            if callback:
+                chunk = "%s(%s)" % (callback, chunk)
         chunk = _utf8(chunk)
         self._write_buffer.append(chunk)
 
