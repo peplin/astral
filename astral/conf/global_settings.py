@@ -34,8 +34,9 @@ LOGGING = {
     'use_syslog': USE_SYSLOG,
 }
 
-ASTRAL_WEBSERVER = "http://localhost:9393"
-BOOTSTRAP_NODES = [{'ip_address': "127.0.0.1", 'port': 8001, 'uuid': 'abcd'},]
+ASTRAL_WEBSERVER = "http://localhost:4567"
+BOOTSTRAP_NODES = [{'ip_address': "127.0.0.1", 'port': 8001, 'uuid': 'abcd',
+    'primary_supernode': 119779273282995},]
 
 DOWNSTREAM_CHECK_LIMIT = 1024 * 1024 * 2
 UPSTREAM_CHECK_LIMIT = 1024 * 256

@@ -1,8 +1,10 @@
-from elixir import Field, Unicode, Integer, Entity, Boolean, using_table_options
+from elixir import (Field, Unicode, Integer, Entity, Boolean,
+        using_table_options, ManyToOne)
 from sqlalchemy import UniqueConstraint
 import uuid
 import socket
 
+from astral.exceptions import NetworkError
 from astral.models.base import BaseEntityMixin
 from astral.api.client import NodeAPI
 from astral.conf import settings
@@ -16,6 +18,7 @@ class Node(BaseEntityMixin, Entity):
     uuid = Field(Integer, nullable=False, unique=True)
     port = Field(Integer, nullable=False)
     supernode = Field(Boolean, nullable=False, default=False)
+    primary_supernode = ManyToOne('Node')
     rtt = Field(Integer)
     upstream = Field(Integer)
     downstream = Field(Integer)
@@ -24,7 +27,8 @@ class Node(BaseEntityMixin, Entity):
 
     RTT_STEP = 0.2
     BANDWIDTH_STEP = 0.2
-    API_FIELDS = ['ip_address', 'uuid', 'port', 'supernode',]
+    API_FIELDS = ['id', 'ip_address', 'uuid', 'port', 'supernode',
+            'primary_supernode_id']
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('uuid'):
@@ -54,6 +58,9 @@ class Node(BaseEntityMixin, Entity):
         if not node:
             node = cls(ip_address=data['ip_address'], uuid=data['uuid'],
                     port=data['port'], supernode=data.get('supernode', False))
+            if 'primary_supernode' in data:
+                node.primary_supernode = Node.get_by(
+                        uuid=data['primary_supernode'])
         return node
 
     def update_rtt(self):
@@ -78,21 +85,30 @@ class Node(BaseEntityMixin, Entity):
             return sample
         return (1 - step) * estimated + step * sample
 
+    def update_primary_supernode(self):
+        for supernode in Node.query.filter_by(supernode=True):
+            try:
+                supernode.update_rtt()
+            except NetworkError:
+                supernode.delete()
+        self.primary_supernode = self.closest_supernode()
+
+    @classmethod
+    def supernodes(cls):
+        return cls.query.filter_by(supernode=True)
+
     @classmethod
     def closest_supernode(cls):
-        closest = cls.query.filter_by(supernode=True).order_by('rtt').first()
+        closest = cls.supernodes().order_by('rtt').first()
         if not closest:
             log.warn("No supernodes in the database")
+        return closest
 
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
 
     def absolute_url(self):
         return '/node/%s' % self.uuid
-
-    def to_dict(self):
-        return dict(((field, getattr(self, field))
-                for field in self.API_FIELDS))
 
     def __repr__(self):
         return u'<Node %s:%d>' % (self.ip_address, self.port)

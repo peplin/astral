@@ -10,7 +10,7 @@ import threading
 import astral.api.app
 from astral.models import Node, session
 from astral.conf import settings
-from astral.exceptions import OriginWebserverError
+from astral.exceptions import NetworkError
 from astral.api.client import Nodes
 
 import logging
@@ -49,25 +49,22 @@ class LocalNode(object):
             base_url = base_url or settings.ASTRAL_WEBSERVER
             try:
                 nodes = Nodes(base_url).get()
-            except OriginWebserverError, e:
+            except NetworkError, e:
                 log.warning("Can't connect to server: %s", e)
             else:
                 log.debug("Nodes returned from the server: %s", nodes)
                 nodes = [Node.from_dict(node) for node in nodes]
 
         def register_with_supernode(self):
-            supernodes = Node.query.filter_by(supernode=True)
-            if supernodes.count() == 0:
+            self.node.update_primary_supernode()
+            if not self.node.primary_supernode:
                 self.node.supernode = True
                 Nodes(settings.ASTRAL_WEBSERVER).post(self.node.to_dict())
-                closest_supernode = self.node
             else:
-                for supernode in supernodes:
-                    supernode.update_rtt()
-                closest_supernode = min(supernodes, key=lambda n: n.rtt)
-                Nodes(closest_supernode.absolute_url()).post(
+                Nodes(self.node.primary_supernode.absolute_url()).post(
                         self.node.to_dict())
-                self.load_dynamic_bootstrap_nodes(closest_supernode.absolute_url())
+                self.load_dynamic_bootstrap_nodes(
+                        self.node.primary_supernode.absolute_url())
             session.commit()
 
         def run(self):

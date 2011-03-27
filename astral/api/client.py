@@ -5,7 +5,7 @@ import random
 import string
 
 from astral.conf import settings
-from astral.exceptions import OriginWebserverError
+from astral.exceptions import NetworkError
 
 
 class NodeAPI(restkit.Resource):
@@ -20,7 +20,7 @@ class NodeAPI(restkit.Resource):
         try:
             response = super(NodeAPI, self).request(*args, **kwargs)
         except restkit.RequestError, e:
-            raise OriginWebserverError(e)
+            raise NetworkError(e)
         else:
             body = response.body_string()
             if body:
