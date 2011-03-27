@@ -1,4 +1,5 @@
 import json
+from tornado.web import HTTPError
 
 from astral.api.handlers.base import BaseHandler
 from astral.models import Ticket, Node, Stream, session
@@ -11,12 +12,12 @@ class StreamHandler(BaseHandler):
     def post(self, stream_id):
         """Return whether or not this node can forward the stream requested to
         the requesting node, and start doing so if it can."""
+        # TODO See LH #35
         # TODO observe some cap on the number of tickets, based on bandwidth
         stream = Stream.get_by(id=stream_id)
         node = Node.get_by(ip_address=self.request.remote_ip)
         if not node:
-            # TODO raise an error
-            pass
+            raise HTTPError(404)
         Ticket(stream=stream, node=node)
         session.commit()
         self.get(stream_id)
@@ -26,8 +27,6 @@ class StreamHandler(BaseHandler):
         self.write(json.dumps({'stream': Stream.get_by(id=stream_id).to_dict()}))
         # TODO could require target nodes to hit this every so often as a
         # heartbeat
-        # TODO if this GET is metadata, what's the endpoint for the actual
-        # stream? Does it come through a different socket, outside of torando?
 
     def delete(self, stream_id):
         """Stop forwarding the stream to the requesting node."""

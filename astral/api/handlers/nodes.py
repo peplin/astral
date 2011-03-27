@@ -1,7 +1,7 @@
 import json
 
 from astral.api.handlers.base import BaseHandler
-from astral.models.node import Node
+from astral.models import Node, session
 
 import logging
 logger = logging.getLogger(__name__)
@@ -15,4 +15,8 @@ class NodesHandler(BaseHandler):
 
     def post(self):
         """Add the node specified in POSTed JSON to the list of known nodes."""
-        # TODO
+        uuid = self.get_json_argument('uuid')
+        if not Node.get_by(uuid=uuid):
+            self.request.arguments['ip_address'] = self.request.remote_ip
+            Node.from_dict(self.request.arguments)
+            session.commit()
