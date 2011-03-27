@@ -35,8 +35,20 @@ LOGGING = {
 }
 
 ASTRAL_WEBSERVER = "http://localhost:4567"
-BOOTSTRAP_NODES = [{'ip_address': "127.0.0.1", 'port': 8001, 'uuid': 'abcd',
-    'primary_supernode': 119779273282995},]
+BOOTSTRAP_NODES = [
+        {'ip_address': "127.0.0.1", 'port': 8001, 'uuid': '1', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8002, 'uuid': '2', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8003, 'uuid': '3', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8004, 'uuid': '4', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8005, 'uuid': '5', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8006, 'uuid': '6', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8007, 'uuid': '7', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8008, 'uuid': '8', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8009, 'uuid': '9', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8010, 'uuid': '10', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8011, 'uuid': '11', 'primary_supernode': 119779273282995},
+        {'ip_address': "127.0.0.1", 'port': 8012, 'uuid': '12', 'primary_supernode': 119779273282995},
+]
 
 DOWNSTREAM_CHECK_LIMIT = 1024 * 1024 * 2
 UPSTREAM_CHECK_LIMIT = 1024 * 256
