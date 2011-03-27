@@ -7,7 +7,7 @@ Node Base Class.
 """
 import threading
 
-import astral.api
+import astral.api.app
 from astral.models import Node, session
 from astral.conf import settings
 from astral.exceptions import OriginWebserverError
@@ -24,7 +24,7 @@ class LocalNode(object):
         self.load_this_node()
         self.BootstrapThread(self.node).start()
         self.DaemonThread().start()
-        astral.api.run()
+        astral.api.app.run()
 
     def load_this_node(self):
         if not getattr(self, 'node', None):
