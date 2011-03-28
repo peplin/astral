@@ -1,5 +1,6 @@
 import json
 import tornado.web
+import tornado.websocket
 from tornado import escape
 from tornado.web import _utf8
 
@@ -60,3 +61,6 @@ class BaseHandler(tornado.web.RequestHandler):
         chunk = _utf8(chunk)
         self._write_buffer.append(chunk)
 
+
+class BaseWebSocketHandler(tornado.websocket.WebSocketHandler, BaseHandler):
+    pass

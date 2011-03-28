@@ -8,7 +8,7 @@ Node Base Class.
 import threading
 
 import astral.api.app
-from astral.models import Node, session
+from astral.models import Node, session, Event
 from astral.conf import settings
 from astral.exceptions import NetworkError
 from astral.api.client import Nodes
@@ -59,12 +59,17 @@ class LocalNode(object):
             self.node.update_primary_supernode()
             if not self.node.primary_supernode:
                 self.node.supernode = True
-                Nodes(settings.ASTRAL_WEBSERVER).post(self.node.to_dict())
+                try:
+                    Nodes(settings.ASTRAL_WEBSERVER).post(self.node.to_dict())
+                except NetworkError, e:
+                    log.warning("Can't connect to server to register as a "
+                            "supernode: %s", e)
             else:
                 Nodes(self.node.primary_supernode.absolute_url()).post(
                         self.node.to_dict())
                 self.load_dynamic_bootstrap_nodes(
                         self.node.primary_supernode.absolute_url())
+            Event(message="I'm registered!")
             session.commit()
 
         def run(self):
