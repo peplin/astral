@@ -9,7 +9,7 @@ from astral.models.event import Event
 
 
 metadata.bind = create_engine("sqlite:///:memory:?check_same_thread=False",
-        echo=True, poolclass=StaticPool)
+        echo=False, poolclass=StaticPool)
 
 setup_all()
 create_all()

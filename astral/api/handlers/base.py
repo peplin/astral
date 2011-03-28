@@ -13,6 +13,9 @@ class BaseHandler(tornado.web.RequestHandler):
     subclass this one.
     """
 
+    def is_localhost(self):
+        return self.request.remote_ip == "127.0.0.1"
+
     def load_json(self):
         """Load JSON from the request body and store them in
         self.request.arguments, like Tornado does by default for POSTed form

@@ -104,6 +104,10 @@ class Node(BaseEntityMixin, Entity):
             log.warn("No supernodes in the database")
         return closest
 
+    @classmethod
+    def me(cls):
+        return Node.get_by(uuid=uuid.getnode())
+
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
 

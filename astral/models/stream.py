@@ -12,5 +12,8 @@ class Stream(BaseEntityMixin, Entity):
     def absolute_url(self):
         return '/stream/%s' % self.id
 
+    def tickets_url(self):
+        return '%s/tickets' % self.absolute_url()
+
     def __repr__(self):
         return u'<Stream %s: %s>' % (self.id, self.name)

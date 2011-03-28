@@ -31,5 +31,6 @@ class ThisNodeFactory(factory.Factory):
 
 
 class TicketFactory(factory.Factory):
-    node = factory.LazyAttribute(lambda a: NodeFactory())
+    source = factory.LazyAttribute(lambda a: NodeFactory())
+    destination = factory.LazyAttribute(lambda a: NodeFactory())
     stream = factory.LazyAttribute(lambda a: StreamFactory())
