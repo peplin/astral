@@ -6,6 +6,7 @@ Node Base Class.
 
 """
 import threading
+import json
 
 import astral.api.app
 from astral.models import Node, session, Event
@@ -89,5 +90,5 @@ class LocalNode(object):
             import time
             while self.is_alive():
                 log.debug("Daemon thread woke up")
-                Event(message="Ping!")
+                Event(message=json.dumps({"type": "update"}))
                 time.sleep(10)
