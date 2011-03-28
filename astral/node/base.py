@@ -69,7 +69,6 @@ class LocalNode(object):
                         self.node.to_dict())
                 self.load_dynamic_bootstrap_nodes(
                         self.node.primary_supernode.absolute_url())
-            Event(message="I'm registered!")
             session.commit()
 
         def run(self):
@@ -90,4 +89,5 @@ class LocalNode(object):
             import time
             while self.is_alive():
                 log.debug("Daemon thread woke up")
+                Event(message="Ping!")
                 time.sleep(10)
