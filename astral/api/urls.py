@@ -14,8 +14,8 @@ url_patterns = [
     (r"/streams", StreamsHandler),
     (r"/stream/(\d+)", StreamHandler),
     (r"/stream/(\d+)/tickets", TicketsHandler),
-    (r"/stream/(\d+)/tickets/(\d+)", TicketsHandler),
     (r"/stream/(\d+)/ticket/(\d+)", TicketHandler),
+    (r"/stream/(\d+)/ticket", TicketHandler),
     (r"/ping", PingHandler),
     (r"/events", EventHandler),
 ]
