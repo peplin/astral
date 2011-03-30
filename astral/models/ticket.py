@@ -7,12 +7,10 @@ from astral.models.event import Event
 from astral.models.node import Node
 
 
-class Ticket(BaseEntityMixin, Entity):
+class Ticket(Entity, BaseEntityMixin):
     source = ManyToOne('Node')
     destination = ManyToOne('Node')
     stream = ManyToOne('Stream')
-
-    API_FIELDS = ['id', 'source_id', 'destination_id', 'stream_id']
 
     def __init__(self, source=None, destination=None, *args, **kwargs):
         source = source or Node.me()
@@ -25,12 +23,12 @@ class Ticket(BaseEntityMixin, Entity):
                 self.destination.uuid)
 
     def to_dict(self):
-        return {'source_uuid': self.source.uuid,
-                'destination_uuid': self.destination.uuid,
+        return {'source': self.source.uuid,
+                'destination': self.destination.uuid,
                 'stream': self.stream_id}
 
     @after_insert
-    def emit_new_node_event(self):
+    def emit_new_ticket_event(self):
         Event(message=json.dumps({'type': "ticket", 'data': self.to_dict()}))
 
     def __repr__(self):

@@ -10,16 +10,17 @@ class Stream(BaseEntityMixin, Entity):
     name = Field(Unicode(48))
     source = ManyToOne('Node')
 
-    API_FIELDS = ['id', 'name', 'source']
-
     def absolute_url(self):
         return '/stream/%s' % self.id
 
     def tickets_url(self):
         return '%s/tickets' % self.absolute_url()
 
+    def to_dict(self):
+        return {'source': self.source.uuid, 'name': self.name, 'id': self.id}
+
     @after_insert
-    def emit_new_node_event(self):
+    def emit_new_stream_event(self):
         Event(message=json.dumps({'type': "stream", 'data': self.to_dict()}))
 
     def __repr__(self):

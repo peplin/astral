@@ -28,6 +28,9 @@ class TicketsHandler(BaseHandler):
 
     def get(self):
         """Return a JSON list of all known tickets."""
+        from astral.models import Ticket
+        from astral.models.tests.factories import StreamFactory
+        Ticket(stream=StreamFactory(source=Node.me()))
         self.write({'tickets': [ticket.to_dict()
                 for ticket in Ticket.query.all()]})
 

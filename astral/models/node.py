@@ -28,10 +28,9 @@ class Node(BaseEntityMixin, Entity):
 
     using_table_options(UniqueConstraint('ip_address', 'port'))
 
+    API_FIELDS = ['ip_address', 'uuid', 'port', 'supernode',]
     RTT_STEP = 0.2
     BANDWIDTH_STEP = 0.2
-    API_FIELDS = ['id', 'ip_address', 'uuid', 'port', 'supernode',
-            'primary_supernode_id']
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('uuid'):
@@ -52,7 +51,6 @@ class Node(BaseEntityMixin, Entity):
         if not kwargs.get('port'):
             kwargs['port'] = settings.PORT
             log.info("Using %s for this node's API port", kwargs['port'])
-
         return super(Node, self).__init__(*args, **kwargs)
 
     @classmethod
@@ -116,6 +114,12 @@ class Node(BaseEntityMixin, Entity):
 
     def absolute_url(self):
         return '/node/%s' % self.uuid
+
+    def to_dict(self):
+        data = super(Node, self).to_dict()
+        if self.primary_supernode:
+            data['primary_supernode_uuid'] = self.primary_supernode.uuid
+        return data
 
     @after_insert
     def emit_new_node_event(self):
