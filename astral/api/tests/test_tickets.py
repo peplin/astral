@@ -4,10 +4,12 @@ import json
 
 from astral.api.tests import BaseTest
 from astral.models import Ticket
-from astral.models.tests.factories import StreamFactory, NodeFactory
+from astral.models.tests.factories import (StreamFactory, NodeFactory,
+        ThisNodeFactory)
 
 class TicketsHandlerTest(BaseTest):
     def test_create(self):
+        ThisNodeFactory()
         node = NodeFactory()
         stream = StreamFactory()
         self.http_client.fetch(HTTPRequest(

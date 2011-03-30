@@ -17,6 +17,11 @@ class Ticket(BaseEntityMixin, Entity):
         return '/stream/%s/ticket/%s' % (self.stream.id,
                 self.destination.uuid)
 
+    def to_dict(self):
+        return {'source_uuid': self.source.uuid,
+                'destination_uuid': self.destination.uuid,
+                'stream': self.stream_id}
+
     @after_insert
     def emit_new_node_event(self):
         Event(message=json.dumps({'type': "ticket", 'data': self.to_dict()}))
