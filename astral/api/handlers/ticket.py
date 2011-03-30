@@ -14,8 +14,7 @@ class TicketHandler(BaseHandler):
             node = Node.me()
 
         if node:
-            ticket = Ticket.get_by(stream_id=stream_id, source=Node.me(),
-                    destination=node)
+            ticket = Ticket.get_by(stream_id=stream_id, destination=node)
             if ticket:
                 ticket.delete()
 

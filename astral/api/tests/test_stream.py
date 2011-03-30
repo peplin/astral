@@ -1,11 +1,9 @@
 from nose.tools import eq_, ok_
-from tornado.httpclient import HTTPRequest
 import json
 
 from astral.api.tests import BaseTest
-from astral.models import Ticket, Node, Stream
-from astral.models.tests.factories import (TicketFactory, StreamFactory,
-        ThisNodeFactory, NodeFactory)
+from astral.models.tests.factories import StreamFactory
+        
 
 class StreamHandlerTest(BaseTest):
     def test_get_stream(self):

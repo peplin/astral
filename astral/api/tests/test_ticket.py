@@ -1,15 +1,14 @@
 from nose.tools import eq_, ok_
 from tornado.httpclient import HTTPRequest
-import json
 
 from astral.api.tests import BaseTest
-from astral.models import Ticket, Node, Stream
-from astral.models.tests.factories import (TicketFactory, StreamFactory,
-        ThisNodeFactory, NodeFactory)
+from astral.models import Ticket, Stream, Node
+from astral.models.tests.factories import TicketFactory, ThisNodeFactory
 
 class TicketHandlerTest(BaseTest):
     def test_delete(self):
-        ticket = TicketFactory()
+        ThisNodeFactory()
+        ticket = TicketFactory(destination=Node.me())
         self.http_client.fetch(HTTPRequest(
             self.get_url(ticket.absolute_url()), 'DELETE'), self.stop)
         response = self.wait()

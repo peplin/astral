@@ -1,6 +1,7 @@
 import factory
 import faker
 import random
+import uuid
 
 from astral.models.stream import Stream
 from astral.models.node import Node
@@ -26,7 +27,7 @@ class ThisNodeFactory(factory.Factory):
     FACTORY_FOR = Node
 
     ip_address = '127.0.0.1'
-    uuid = factory.LazyAttribute(lambda a: random.randrange(1000, 1000000))
+    uuid = factory.LazyAttribute(lambda a: uuid.getnode())
     port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
 
 

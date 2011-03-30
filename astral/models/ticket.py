@@ -9,7 +9,8 @@ class Ticket(BaseEntityMixin, Entity):
     stream = ManyToOne('Stream')
 
     def absolute_url(self):
-        return '/stream/%s/ticket/%s' % (self.id, self.destination.uuid)
+        return '/stream/%s/ticket/%s' % (self.stream.id,
+                self.destination.uuid)
 
     def __repr__(self):
         return u'<Ticket %s: %s from %s to %s>' % (
