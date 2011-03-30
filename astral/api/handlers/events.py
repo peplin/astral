@@ -7,9 +7,6 @@ log = logging.getLogger(__name__)
 # TODO make this thread safe if we have more than one event listener
 LISTENERS = []
 
-# TODO send 'update' messages when nodes or streams change, client will reload
-# and re-render
-
 
 def queue_listener():
     while True:
