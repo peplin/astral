@@ -12,6 +12,7 @@ url_patterns = [
     (r"/nodes", NodesHandler),
     (r"/node/(\d+)", NodeHandler),
     (r"/streams", StreamsHandler),
+    (r"/tickets", TicketsHandler),
     (r"/stream/(\d+)", StreamHandler),
     (r"/stream/(\d+)/tickets", TicketsHandler),
     (r"/stream/(\d+)/ticket/(\d+)", TicketHandler),

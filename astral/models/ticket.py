@@ -4,6 +4,7 @@ import json
 
 from astral.models.base import BaseEntityMixin
 from astral.models.event import Event
+from astral.models.node import Node
 
 
 class Ticket(BaseEntityMixin, Entity):
@@ -12,6 +13,12 @@ class Ticket(BaseEntityMixin, Entity):
     stream = ManyToOne('Stream')
 
     API_FIELDS = ['id', 'source_id', 'destination_id', 'stream_id']
+
+    def __init__(self, source=None, destination=None, *args, **kwargs):
+        source = source or Node.me()
+        destination = destination or Node.me()
+        super(Ticket, self).__init__(source=source,
+                destination=destination, *args, **kwargs)
 
     def absolute_url(self):
         return '/stream/%s/ticket/%s' % (self.stream.id,

@@ -19,9 +19,15 @@ class TicketsHandler(BaseHandler):
             node = Node.get_by(uuid=destination_uuid)
             if not node:
                 raise HTTPError(404)
-            Ticket(stream=stream, source=Node.me(), destination=node)
+            Ticket(stream=stream, destination=node)
         else:
             # TODO See LH #35
-            Ticket(stream=stream, source=Node.me(), destination=Node.me())
+            Ticket(stream=stream)
         session.commit()
         self.redirect(stream.absolute_url())
+
+    def get(self):
+        """Return a JSON list of all known tickets."""
+        self.write({'tickets': [ticket.to_dict()
+                for ticket in Ticket.query.all()]})
+
