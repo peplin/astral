@@ -1,6 +1,9 @@
 from elixir import ManyToOne, Entity
+from elixir.events import after_insert
+import json
 
 from astral.models.base import BaseEntityMixin
+from astral.models.event import Event
 
 
 class Ticket(BaseEntityMixin, Entity):
@@ -11,6 +14,10 @@ class Ticket(BaseEntityMixin, Entity):
     def absolute_url(self):
         return '/stream/%s/ticket/%s' % (self.stream.id,
                 self.destination.uuid)
+
+    @after_insert
+    def emit_new_node_event(self):
+        Event(message=json.dumps({'type': "ticket", 'data': self.to_dict()}))
 
     def __repr__(self):
         return u'<Ticket %s: %s from %s to %s>' % (

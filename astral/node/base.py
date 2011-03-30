@@ -90,5 +90,5 @@ class LocalNode(object):
             import time
             while self.is_alive():
                 log.debug("Daemon thread woke up")
-                Event(message=json.dumps({"type": "update"}))
+                Event(message=json.dumps({'type': "update"}))
                 time.sleep(10)

@@ -14,7 +14,9 @@ LISTENERS = []
 def queue_listener():
     while True:
         event = EVENT_QUEUE.get()
+        log.debug("Found %s in event queue", event)
         for client in LISTENERS:
+            log.debug("Sending %s to %s", event, client)
             client.write_message(unicode(event.message))
         EVENT_QUEUE.task_done()
 

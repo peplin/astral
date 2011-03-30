@@ -1,11 +1,14 @@
 from elixir import (Field, Unicode, Integer, Entity, Boolean,
         using_table_options, ManyToOne)
+from elixir.events import after_insert
 from sqlalchemy import UniqueConstraint
 import uuid
 import socket
+import json
 
 from astral.exceptions import NetworkError
 from astral.models.base import BaseEntityMixin
+from astral.models.event import Event
 from astral.api.client import NodeAPI
 from astral.conf import settings
 
@@ -113,6 +116,10 @@ class Node(BaseEntityMixin, Entity):
 
     def absolute_url(self):
         return '/node/%s' % self.uuid
+
+    @after_insert
+    def emit_new_node_event(self):
+        Event(message=json.dumps({'type': "node", 'data': self.to_dict()}))
 
     def __repr__(self):
         return u'<Node %s:%d>' % (self.ip_address, self.port)
