@@ -11,6 +11,8 @@ class Ticket(BaseEntityMixin, Entity):
     destination = ManyToOne('Node')
     stream = ManyToOne('Stream')
 
+    API_FIELDS = ['id', 'source_id', 'destination_id', 'stream_id']
+
     def absolute_url(self):
         return '/stream/%s/ticket/%s' % (self.stream.id,
                 self.destination.uuid)
