@@ -7,7 +7,7 @@ from astral.models.tests.factories import StreamFactory
 
 class StreamsHandlerTest(BaseTest):
     def test_get_streams(self):
-        streams = [StreamFactory() for _ in range(3)]
+        [StreamFactory() for _ in range(3)]
         response = self.fetch('/streams')
         eq_(response.code, 200)
         result = json.loads(response.body)
