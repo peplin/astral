@@ -1,5 +1,5 @@
 from elixir import (Field, Unicode, Integer, Entity, Boolean,
-        using_table_options, ManyToOne)
+        using_table_options, ManyToOne, session)
 from elixir.events import after_insert
 from sqlalchemy import UniqueConstraint
 import uuid
@@ -96,7 +96,6 @@ class Node(BaseEntityMixin, Entity):
                 supernode.update_rtt()
             except NetworkError:
                 supernode.delete()
-        self.primary_supernode = self.closest_supernode()
 
     @classmethod
     def supernodes(cls):

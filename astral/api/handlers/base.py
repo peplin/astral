@@ -56,7 +56,8 @@ class BaseHandler(tornado.web.RequestHandler):
         'application/json', not 'text/javascript'.
         """
         assert not self._finished
-        if isinstance(chunk, dict):
+        # TODO roll this back to just dict after the demo and fixing the bug
+        if isinstance(chunk, dict) or isinstance(chunk, list):
             chunk = escape.json_encode(chunk)
             self.set_header("Content-Type", "application/json")
             callback = self.get_argument('callback', None)
