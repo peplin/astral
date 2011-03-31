@@ -63,9 +63,9 @@ class Node(BaseEntityMixin, Entity):
         if not node:
             node = cls(ip_address=data['ip_address'], uuid=data['uuid'],
                     port=data['port'], supernode=data.get('supernode', False))
-            if 'primary_supernode' in data:
+            if 'primary_supernode_uuid' in data:
                 node.primary_supernode = Node.get_by(
-                        uuid=data['primary_supernode'])
+                        uuid=data['primary_supernode_uuid'])
         return node
 
     def update_rtt(self):
