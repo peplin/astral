@@ -2,15 +2,17 @@ from nose.tools import ok_, eq_, raises
 import mockito
 import restkit
 
+from astral.models import session
 from astral.models.node import Node
 from astral.api.client import NodeAPI
 from astral.api.tests import BaseTest
+from astral.models.tests.factories import SupernodeFactory, ThisNodeFactory
 
 
 class NodeRTTTest(BaseTest):
     def setUp(self):
         super(NodeRTTTest, self).setUp()
-        self.node = Node(ip_address='localhost', port='8000')
+        self.node = ThisNodeFactory()
 
     @raises(restkit.RequestError)
     def test_update_rtt_error(self):
@@ -36,7 +38,7 @@ class NodeRTTTest(BaseTest):
 class NodeDownstreamTest(BaseTest):
     def setUp(self):
         super(NodeDownstreamTest, self).setUp()
-        self.node = Node(ip_address='localhost', port='8000')
+        self.node = ThisNodeFactory()
 
     @raises(restkit.RequestError)
     def test_update_downstream_error(self):
@@ -63,7 +65,7 @@ class NodeDownstreamTest(BaseTest):
 class NodeUpstreamTest(BaseTest):
     def setUp(self):
         super(NodeUpstreamTest, self).setUp()
-        self.node = Node(ip_address='localhost', port='8000')
+        self.node = ThisNodeFactory()
 
     @raises(restkit.RequestError)
     def test_update_upstream_error(self):
@@ -85,3 +87,16 @@ class NodeUpstreamTest(BaseTest):
         upstream = self.node.update_upstream()
         ok_(upstream < 100)
         ok_(upstream > 10)
+
+
+class NodePrimarySupernodeTest(BaseTest):
+    def setUp(self):
+        super(NodePrimarySupernodeTest, self).setUp()
+        self.node = ThisNodeFactory()
+
+    def test_updates_to_only_choice(self):
+        mockito.when(NodeAPI).ping().thenReturn(42)
+        supernode = SupernodeFactory()
+        eq_(self.node.primary_supernode, None)
+        self.node.update_primary_supernode()
+        eq_(self.node.primary_supernode, supernode)

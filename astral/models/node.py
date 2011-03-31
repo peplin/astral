@@ -130,4 +130,4 @@ class Node(BaseEntityMixin, Entity):
         Event(message=json.dumps({'type': "node", 'data': self.to_dict()}))
 
     def __repr__(self):
-        return u'<Node %s:%d>' % (self.ip_address, self.port)
+        return u'<Node %s:%s>' % (self.ip_address, self.port)
