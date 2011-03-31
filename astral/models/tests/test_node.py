@@ -2,16 +2,19 @@ from nose.tools import ok_, eq_, raises
 import mockito
 import restkit
 
-from astral.models.node import Node
+from astral.models import Node
 from astral.api.client import NodeAPI
 from astral.api.tests import BaseTest
+from astral.models.tests.factories import SupernodeFactory
 
 
-class NodeRTTTest(BaseTest):
+class BaseNodeTest(BaseTest):
     def setUp(self):
-        super(NodeRTTTest, self).setUp()
-        self.node = Node(ip_address='localhost', port='8000')
+        super(BaseNodeTest, self).setUp()
+        self.node = Node.me()
 
+
+class NodeRTTTest(BaseNodeTest):
     @raises(restkit.RequestError)
     def test_update_rtt_error(self):
         mockito.when(NodeAPI).ping().thenRaise(restkit.RequestError())
@@ -33,11 +36,7 @@ class NodeRTTTest(BaseTest):
         ok_(rtt > 10)
 
 
-class NodeDownstreamTest(BaseTest):
-    def setUp(self):
-        super(NodeDownstreamTest, self).setUp()
-        self.node = Node(ip_address='localhost', port='8000')
-
+class NodeDownstreamTest(BaseNodeTest):
     @raises(restkit.RequestError)
     def test_update_downstream_error(self):
         mockito.when(NodeAPI).downstream_check().thenRaise(
@@ -60,11 +59,7 @@ class NodeDownstreamTest(BaseTest):
         ok_(downstream > 10)
 
 
-class NodeUpstreamTest(BaseTest):
-    def setUp(self):
-        super(NodeUpstreamTest, self).setUp()
-        self.node = Node(ip_address='localhost', port='8000')
-
+class NodeUpstreamTest(BaseNodeTest):
     @raises(restkit.RequestError)
     def test_update_upstream_error(self):
         mockito.when(NodeAPI).upstream_check().thenRaise(
@@ -85,3 +80,12 @@ class NodeUpstreamTest(BaseTest):
         upstream = self.node.update_upstream()
         ok_(upstream < 100)
         ok_(upstream > 10)
+
+
+class NodePrimarySupernodeTest(BaseNodeTest):
+    def test_updates_to_only_choice(self):
+        mockito.when(NodeAPI).ping().thenReturn(42)
+        supernode = SupernodeFactory()
+        eq_(self.node.primary_supernode, None)
+        self.node.update_primary_supernode()
+        eq_(self.node.primary_supernode, supernode)

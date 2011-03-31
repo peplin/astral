@@ -1,5 +1,6 @@
 import json
 import tornado.web
+import tornado.websocket
 from tornado import escape
 from tornado.web import _utf8
 
@@ -12,6 +13,9 @@ class BaseHandler(tornado.web.RequestHandler):
     subclass this one.
     """
 
+    def is_localhost(self):
+        return self.request.remote_ip == "127.0.0.1"
+
     def load_json(self):
         """Load JSON from the request body and store them in
         self.request.arguments, like Tornado does by default for POSTed form
@@ -19,12 +23,13 @@ class BaseHandler(tornado.web.RequestHandler):
 
         If JSON cannot be decoded, raises an HTTPError with status 400.
         """
-        try:
-            self.request.arguments = json.loads(self.request.body)
-        except ValueError:
-            msg = "Could not decode JSON: %s" % self.request.body
-            logger.debug(msg)
-            raise tornado.web.HTTPError(400, msg)
+        if self.request.body:
+            try:
+                self.request.arguments = json.loads(self.request.body)
+            except ValueError:
+                msg = "Could not decode JSON: %s" % self.request.body
+                logger.debug(msg)
+                raise tornado.web.HTTPError(400, msg)
 
     def get_json_argument(self, name, default=None):
         """Find and return the argument with key 'name' from JSON request data.
@@ -54,6 +59,12 @@ class BaseHandler(tornado.web.RequestHandler):
         if isinstance(chunk, dict):
             chunk = escape.json_encode(chunk)
             self.set_header("Content-Type", "application/json")
+            callback = self.get_argument('callback', None)
+            if callback:
+                chunk = "%s(%s)" % (callback, chunk)
         chunk = _utf8(chunk)
         self._write_buffer.append(chunk)
 
+
+class BaseWebSocketHandler(tornado.websocket.WebSocketHandler, BaseHandler):
+    pass

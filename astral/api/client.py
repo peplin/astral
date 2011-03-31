@@ -5,7 +5,7 @@ import random
 import string
 
 from astral.conf import settings
-from astral.exceptions import OriginWebserverError
+from astral.exceptions import NetworkError
 
 
 class NodeAPI(restkit.Resource):
@@ -20,11 +20,13 @@ class NodeAPI(restkit.Resource):
         try:
             response = super(NodeAPI, self).request(*args, **kwargs)
         except restkit.RequestError, e:
-            raise OriginWebserverError(e)
+            raise NetworkError(e)
         else:
             body = response.body_string()
-            if body:
+            if body and response.headers.get('Content-Type'
+                    ) == "application/json":
                 return json.loads(body)
+            return body
 
     def ping(self):
         timer = timeit.Timer("NodeAPI('%s').get('/ping')" % self.uri,
@@ -50,16 +52,23 @@ class NodeAPI(restkit.Resource):
 
 
 class Nodes(NodeAPI):
-    def get(self, query=None):
+    def list(self, query=None):
         return super(Nodes, self).get('/nodes', query)
 
-    def post(self, payload=None):
+    def register(self, payload=None):
         return super(Nodes, self).post('/nodes', payload=json.dumps(payload))
 
-    def delete(self, node):
+    def unregister(self, node):
         return super(Nodes, self).delete(node.absolute_url())
 
 
 class Streams(NodeAPI):
-    def get(self, query=None):
+    def list(self, query=None):
         return super(Nodes, self).get('/streams', query)
+
+
+class Tickets(NodeAPI):
+    def create(self, tickets_url, destination_uuid=None):
+        response = super(Tickets, self).post(tickets_url, payload=json.dumps(
+            {'destination_uuid': destination_uuid}))
+        return response.status == 200

@@ -6,11 +6,12 @@ Node Base Class.
 
 """
 import threading
+import json
 
-import astral.api
-from astral.models import Node, session
+import astral.api.app
+from astral.models import Node, session, Event
 from astral.conf import settings
-from astral.exceptions import OriginWebserverError
+from astral.exceptions import NetworkError
 from astral.api.client import Nodes
 
 import logging
@@ -24,11 +25,11 @@ class LocalNode(object):
         self.load_this_node()
         self.BootstrapThread(self.node).start()
         self.DaemonThread().start()
-        astral.api.run()
+        astral.api.app.run()
 
     def load_this_node(self):
         if not getattr(self, 'node', None):
-            self.node = Node()
+            self.node = Node.me()
             session.commit()
 
     class BootstrapThread(threading.Thread):
@@ -48,26 +49,28 @@ class LocalNode(object):
         def load_dynamic_bootstrap_nodes(self, base_url=None):
             base_url = base_url or settings.ASTRAL_WEBSERVER
             try:
-                nodes = Nodes(base_url).get()
-            except OriginWebserverError, e:
+                nodes = Nodes(base_url).list()
+            except NetworkError, e:
                 log.warning("Can't connect to server: %s", e)
             else:
                 log.debug("Nodes returned from the server: %s", nodes)
                 nodes = [Node.from_dict(node) for node in nodes]
 
         def register_with_supernode(self):
-            supernodes = Node.query.filter_by(supernode=True)
-            if supernodes.count() == 0:
+            self.node.update_primary_supernode()
+            if not self.node.primary_supernode:
                 self.node.supernode = True
-                Nodes(settings.ASTRAL_WEBSERVER).post(self.node.to_dict())
-                closest_supernode = self.node
+                try:
+                    Nodes(settings.ASTRAL_WEBSERVER).register(
+                            self.node.to_dict())
+                except NetworkError, e:
+                    log.warning("Can't connect to server to register as a "
+                            "supernode: %s", e)
             else:
-                for supernode in supernodes:
-                    supernode.update_rtt()
-                closest_supernode = min(supernodes, key=lambda n: n.rtt)
-                Nodes(closest_supernode.absolute_url()).post(
+                Nodes(self.node.primary_supernode.absolute_url()).post(
                         self.node.to_dict())
-                self.load_dynamic_bootstrap_nodes(closest_supernode.absolute_url())
+                self.load_dynamic_bootstrap_nodes(
+                        self.node.primary_supernode.absolute_url())
             session.commit()
 
         def run(self):
@@ -88,4 +91,5 @@ class LocalNode(object):
             import time
             while self.is_alive():
                 log.debug("Daemon thread woke up")
+                Event(message=json.dumps({'type': "update"}))
                 time.sleep(10)
