@@ -111,7 +111,8 @@ class Node(BaseEntityMixin, Entity):
 
     @classmethod
     def me(cls):
-        return Node.get_by(uuid=settings.UUID_OVERRIDE or uuid.getnode())
+        return (Node.get_by(uuid=settings.UUID_OVERRIDE or uuid.getnode()) or
+                Node())
 
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)

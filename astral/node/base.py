@@ -29,7 +29,7 @@ class LocalNode(object):
 
     def load_this_node(self):
         if not getattr(self, 'node', None):
-            self.node = Node()
+            self.node = Node.me()
             session.commit()
 
     class BootstrapThread(threading.Thread):
