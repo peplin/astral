@@ -5,7 +5,7 @@ import mockito
 
 from astral.api.tests import BaseTest
 from astral.api.client import Tickets
-from astral.models import Ticket, Node, session
+from astral.models import Ticket, Node, session, Stream
 from astral.models.tests.factories import (StreamFactory, NodeFactory,
         ThisNodeFactory, TicketFactory)
 
@@ -129,16 +129,17 @@ class TicketsHandlerTest(BaseTest):
 class TicketsListHandlerTest(BaseTest):
     def setUp(self):
         super(TicketsListHandlerTest, self).setUp()
-        [TicketFactory for _ in range(3)]
+        [TicketFactory() for _ in range(3)]
 
     def test_get_tickets(self):
         response = self.fetch('/tickets')
         eq_(response.code, 200)
         result = json.loads(response.body)
         ok_('tickets' in result)
+        eq_(len(result['tickets']), 3)
         for ticket in result['tickets']:
-            source = Node.get_by(uuid=ticket['source_uuid'])
-            destination = Node.get_by(uuid=ticket['destination_uuid'])
-            ok_(Ticket.get_by(stream=ticket['stream_id'],
+            source = Node.get_by(uuid=ticket['source'])
+            destination = Node.get_by(uuid=ticket['destination'])
+            ok_(Ticket.get_by(stream=Stream.get_by(id=ticket['stream']),
                 source=source, destination=destination))
 
