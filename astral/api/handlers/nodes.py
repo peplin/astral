@@ -8,7 +8,10 @@ logger = logging.getLogger(__name__)
 class NodesHandler(BaseHandler):
     def get(self):
         """Return a JSON list of all known nodes, with metadata."""
-        self.write({'nodes': [node.to_dict() for node in Node.query.all()]})
+        # TODO would like to wrap this in a object, but couldn't do that easily
+        # with DataMapper on the origin webserver side, and I really want the
+        # APIs to be identical.
+        self.write([node.to_dict() for node in Node.query.all()])
 
     def post(self):
         """Add the node specified in POSTed JSON to the list of known nodes."""
