@@ -77,7 +77,6 @@ class LocalNode(object):
                             self.node.to_dict())
                 except NetworkError, e:
                     # TODO try another?
-                    from ipdb import set_trace; set_trace(); # TODO
                     log.warning("Can't connect to supernode %s to register"
                             ": %s", self.node.primary_supernode, e)
                 else:
