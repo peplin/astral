@@ -15,6 +15,7 @@ factory.Factory.set_creation_function(ELIXIR_CREATION)
 class StreamFactory(factory.Factory):
     id = factory.Sequence(lambda n: int(n) + 1)
     name = factory.LazyAttribute(lambda a: ' '.join(faker.lorem.words()))
+    source = factory.LazyAttribute(lambda a: NodeFactory())
 
 
 class NodeFactory(factory.Factory):
