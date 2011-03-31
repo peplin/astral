@@ -30,4 +30,3 @@ class TicketsHandler(BaseHandler):
         """Return a JSON list of all known tickets."""
         self.write({'tickets': [ticket.to_dict()
                 for ticket in Ticket.query.all()]})
-
