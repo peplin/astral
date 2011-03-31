@@ -34,7 +34,7 @@ class Node(BaseEntityMixin, Entity):
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('uuid'):
-            kwargs['uuid'] = uuid.getnode()
+            kwargs['uuid'] = settings.UUID_OVERRIDE or uuid.getnode()
             log.info("Using %s for this node's unique ID", kwargs['uuid'])
 
         if not kwargs.get('ip_address'):
@@ -107,7 +107,7 @@ class Node(BaseEntityMixin, Entity):
 
     @classmethod
     def me(cls):
-        return Node.get_by(uuid=uuid.getnode())
+        return Node.get_by(uuid=settings.UUID_OVERRIDE or uuid.getnode())
 
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
