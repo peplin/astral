@@ -1,7 +1,7 @@
 import tornado.testing
 
 from astral.api.app import NodeWebAPI
-from astral.models import drop_all, setup_all, create_all
+from astral.models import drop_all, setup_all, create_all, session
 
 
 class BaseTest(tornado.testing.AsyncHTTPTestCase):
@@ -18,4 +18,5 @@ class BaseTest(tornado.testing.AsyncHTTPTestCase):
 
     def tearDown(self):
         super(BaseTest, self).tearDown()
+        session.commit()
         drop_all()
