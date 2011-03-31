@@ -58,6 +58,11 @@ class LocalNode(object):
 
         def register_with_supernode(self):
             self.node.update_primary_supernode()
+            # TODO hacky hacky hacky, for the demo
+            session.commit()
+            session.close_all()
+            self.node = Node.me()
+            self.node.primary_supernode = Node.closest_supernode()
             if not self.node.primary_supernode:
                 self.node.supernode = True
                 try:
@@ -67,10 +72,17 @@ class LocalNode(object):
                     log.warning("Can't connect to server to register as a "
                             "supernode: %s", e)
             else:
-                Nodes(self.node.primary_supernode.absolute_url()).post(
-                        self.node.to_dict())
-                self.load_dynamic_bootstrap_nodes(
-                        self.node.primary_supernode.absolute_url())
+                try:
+                    Nodes(self.node.primary_supernode.uri()).register(
+                            self.node.to_dict())
+                except NetworkError, e:
+                    # TODO try another?
+                    from ipdb import set_trace; set_trace(); # TODO
+                    log.warning("Can't connect to supernode %s to register"
+                            ": %s", self.node.primary_supernode, e)
+                else:
+                    self.load_dynamic_bootstrap_nodes(
+                            self.node.primary_supernode.uri())
             session.commit()
 
         def run(self):
