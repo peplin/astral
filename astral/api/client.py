@@ -23,8 +23,10 @@ class NodeAPI(restkit.Resource):
             raise NetworkError(e)
         else:
             body = response.body_string()
-            if body:
+            if body and response.headers.get('Content-Type'
+                    ) == "application/json":
                 return json.loads(body)
+            return body
 
     def ping(self):
         timer = timeit.Timer("NodeAPI('%s').get('/ping')" % self.uri,
