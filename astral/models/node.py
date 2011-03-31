@@ -56,6 +56,10 @@ class Node(BaseEntityMixin, Entity):
     @classmethod
     def from_dict(cls, data):
         node = Node.get_by(uuid=data['uuid'])
+        # TODO if we get ourselves back and should be a supernode, need to
+        # update ourselves
+        # TODO argh, ths makes running on one machine tough. need to be able to
+        # override uuid for testing.
         if not node:
             node = cls(ip_address=data['ip_address'], uuid=data['uuid'],
                     port=data['port'], supernode=data.get('supernode', False))

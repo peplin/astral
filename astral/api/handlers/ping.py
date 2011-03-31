@@ -17,10 +17,10 @@ class PingHandler(BaseHandler):
             log.debug("Returning %s bytes for a downstream bandwidth test",
                     byte_count)
             with open('/dev/urandom') as random_file:
-                self.write(random_file.read(
-                    max(byte_count, settings.DOWNSTREAM_CHECK_LIMIT)))
+                self.write({'data': random_file.read(
+                    max(byte_count, settings.DOWNSTREAM_CHECK_LIMIT))})
         else:
-            self.write("Pong!")
+            self.write({'result': "Pong!"})
             log.debug("Responded to a ping")
 
     def post(self):
