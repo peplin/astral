@@ -66,11 +66,39 @@ class TicketsHandlerTest(BaseTest):
     def test_already_streaming(self):
         stream = StreamFactory(source=Node.me())
         TicketFactory(stream=stream, source=Node.me())
+        tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(
             self.get_url(stream.tickets_url()), 'POST', body=''),
             self.stop)
         response = self.wait()
         eq_(response.code, 200)
+        eq_(Ticket.query.count(), tickets_before)
+
+    def test_already_seeding(self):
+        stream = StreamFactory()
+        TicketFactory(stream=stream, destination=Node.me())
+        tickets_before = Ticket.query.count()
+        self.http_client.fetch(HTTPRequest(
+            self.get_url(stream.tickets_url()), 'POST', body=''),
+            self.stop)
+        response = self.wait()
+        eq_(response.code, 200)
+        eq_(Ticket.query.count(), tickets_before + 1)
+
+    def test_other_known_tickets(self):
+        mockito.when(Tickets).create(mockito.any(),
+                destination_uuid=mockito.any()).thenReturn(True)
+        stream = StreamFactory()
+        existing_ticket = TicketFactory(stream=stream)
+        tickets_before = Ticket.query.count()
+        self.http_client.fetch(HTTPRequest(
+            self.get_url(stream.tickets_url()), 'POST', body=''),
+            self.stop)
+        response = self.wait()
+        eq_(response.code, 200)
+        eq_(Ticket.query.count(), tickets_before + 2)
+        ticket = Ticket.query.filter_by(destination=Node.me()).first()
+        eq_(ticket.source, existing_ticket.destination)
 
     def test_remote_source(self):
         mockito.when(Tickets).create(mockito.any(),
@@ -93,6 +121,10 @@ class TicketsHandlerTest(BaseTest):
         response = self.wait()
         eq_(response.code, 412)
         eq_(Ticket.query.count(), tickets_before)
+
+    def test_fallback_to_another_remote_node(self):
+        # TODO node should be able to return a different source than itself
+        assert False
 
 class TicketsListHandlerTest(BaseTest):
     def setUp(self):

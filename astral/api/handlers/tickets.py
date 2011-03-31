@@ -24,7 +24,7 @@ class TicketsHandler(BaseHandler):
         except NetworkError, e:
             log.info("Couldn't connect to %s to ask for %s -- deleting "
                     "the node from the database", node, stream) 
-            log.debug("Nod returned: %s", e)
+            log.debug("Node returned: %s", e)
             node.delete()
         else:
             if created:
