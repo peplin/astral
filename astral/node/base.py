@@ -49,7 +49,7 @@ class LocalNode(object):
         def load_dynamic_bootstrap_nodes(self, base_url=None):
             base_url = base_url or settings.ASTRAL_WEBSERVER
             try:
-                nodes = Nodes(base_url).get()
+                nodes = Nodes(base_url).list()
             except NetworkError, e:
                 log.warning("Can't connect to server: %s", e)
             else:
@@ -61,7 +61,8 @@ class LocalNode(object):
             if not self.node.primary_supernode:
                 self.node.supernode = True
                 try:
-                    Nodes(settings.ASTRAL_WEBSERVER).post(self.node.to_dict())
+                    Nodes(settings.ASTRAL_WEBSERVER).register(
+                            self.node.to_dict())
                 except NetworkError, e:
                     log.warning("Can't connect to server to register as a "
                             "supernode: %s", e)

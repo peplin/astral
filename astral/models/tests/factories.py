@@ -3,6 +3,7 @@ import faker
 import random
 import uuid
 
+from astral.conf import settings
 from astral.models.stream import Stream
 from astral.models.node import Node
 from astral.models.ticket import Ticket
@@ -29,7 +30,7 @@ class ThisNodeFactory(factory.Factory):
 
     ip_address = '127.0.0.1'
     uuid = factory.LazyAttribute(lambda a: uuid.getnode())
-    port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
+    port = factory.LazyAttribute(lambda a: settings.PORT)
 
 
 class TicketFactory(factory.Factory):
