@@ -27,7 +27,7 @@ class TicketsHandler(BaseHandler):
             log.debug("Nod returned: %s", e)
             node.delete()
         else:
-            if created.status == 200:
+            if created:
                 # TODO actually, the source returned might be different
                 return Ticket(stream=stream, source=node)
 

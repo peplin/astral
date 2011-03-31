@@ -67,5 +67,6 @@ class Streams(NodeAPI):
 
 class Tickets(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
-        return super(Tickets, self).post(tickets_url,
-                payload=json.dumps({'destination_uuid': destination_uuid}))
+        response = super(Tickets, self).post(tickets_url, payload=json.dumps(
+            {'destination_uuid': destination_uuid}))
+        return response.status == 200
