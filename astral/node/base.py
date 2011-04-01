@@ -58,7 +58,8 @@ class LocalNode(object):
 
         def register_with_supernode(self):
             self.node.update_primary_supernode()
-            # TODO hacky hacky hacky, for the demo
+            # TODO hacky hacky hacky. moving query inside of the node causes
+            # SQLAlchemy session errors.
             session.commit()
             session.close_all()
             self.node = Node.me()

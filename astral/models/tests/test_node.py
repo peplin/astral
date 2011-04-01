@@ -88,4 +88,5 @@ class NodePrimarySupernodeTest(BaseNodeTest):
         supernode = SupernodeFactory()
         eq_(self.node.primary_supernode, None)
         self.node.update_primary_supernode()
+        self.node.primary_supernode = Node.closest_supernode()
         eq_(self.node.primary_supernode, supernode)
