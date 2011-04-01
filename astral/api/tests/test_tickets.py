@@ -16,7 +16,7 @@ class TicketsHandlerTest(BaseTest):
         session.commit()
 
     def test_create(self):
-        stream = StreamFactory()
+        stream = StreamFactory(source=Node.me())
         node = NodeFactory()
         self.http_client.fetch(HTTPRequest(
             self.get_url(stream.tickets_url()), 'POST',
@@ -24,9 +24,9 @@ class TicketsHandlerTest(BaseTest):
         response = self.wait()
         eq_(response.code, 200)
         result = json.loads(response.body)
-        ok_('stream' in result)
-        eq_(result['stream']['id'], stream.id)
-        eq_(result['stream']['name'], stream.name)
+        ok_('ticket' in result)
+        eq_(result['ticket']['stream'], stream.id)
+        eq_(result['ticket']['source'], Node.me().uuid)
         ticket = Ticket.query.first()
         eq_(ticket.stream, stream)
         eq_(ticket.destination, node)
@@ -47,9 +47,9 @@ class TicketsHandlerTest(BaseTest):
         response = self.wait()
         eq_(response.code, 200)
         result = json.loads(response.body)
-        ok_('stream' in result)
-        eq_(result['stream']['id'], stream.id)
-        eq_(result['stream']['name'], stream.name)
+        ok_('ticket' in result)
+        eq_(result['ticket']['stream'], stream.id)
+        eq_(result['ticket']['source'], Node.me().uuid)
         ticket = Ticket.query.first()
         eq_(ticket.stream, stream)
         eq_(ticket.destination, Node.me())
@@ -65,7 +65,7 @@ class TicketsHandlerTest(BaseTest):
 
     def test_already_streaming(self):
         stream = StreamFactory(source=Node.me())
-        TicketFactory(stream=stream, source=Node.me())
+        TicketFactory(stream=stream, source=Node.me(), destination=Node.me())
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(
             self.get_url(stream.tickets_url()), 'POST', body=''),
@@ -124,7 +124,15 @@ class TicketsHandlerTest(BaseTest):
 
     def test_fallback_to_another_remote_node(self):
         # TODO node should be able to return a different source than itself
-        assert False
+        mockito.when(TicketsAPI).create(mockito.any(),
+                destination_uuid=mockito.any()).thenReturn(True)
+        stream = StreamFactory()
+        tickets_before = Ticket.query.count()
+        self.http_client.fetch(HTTPRequest(self.get_url(stream.tickets_url()),
+            'POST', body=''), self.stop)
+        response = self.wait()
+        eq_(response.code, 200)
+        eq_(Ticket.query.count(), tickets_before + 2)
 
 class TicketsListHandlerTest(BaseTest):
     def setUp(self):
