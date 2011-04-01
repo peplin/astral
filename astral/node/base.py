@@ -12,7 +12,7 @@ import astral.api.app
 from astral.models import Node, session, Event
 from astral.conf import settings
 from astral.exceptions import NetworkError
-from astral.api.client import Nodes
+from astral.api.client import NodesAPI
 
 import logging
 log = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class LocalNode(object):
         def load_dynamic_bootstrap_nodes(self, base_url=None):
             base_url = base_url or settings.ASTRAL_WEBSERVER
             try:
-                nodes = Nodes(base_url).list()
+                nodes = NodesAPI(base_url).list()
             except NetworkError, e:
                 log.warning("Can't connect to server: %s", e)
             else:
@@ -66,14 +66,14 @@ class LocalNode(object):
             if not self.node.primary_supernode:
                 self.node.supernode = True
                 try:
-                    Nodes(settings.ASTRAL_WEBSERVER).register(
+                    NodesAPI(settings.ASTRAL_WEBSERVER).register(
                             self.node.to_dict())
                 except NetworkError, e:
                     log.warning("Can't connect to server to register as a "
                             "supernode: %s", e)
             else:
                 try:
-                    Nodes(self.node.primary_supernode.uri()).register(
+                    NodesAPI(self.node.primary_supernode.uri()).register(
                             self.node.to_dict())
                 except NetworkError, e:
                     # TODO try another?

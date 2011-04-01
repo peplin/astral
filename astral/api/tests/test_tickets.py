@@ -4,7 +4,7 @@ import json
 import mockito
 
 from astral.api.tests import BaseTest
-from astral.api.client import Tickets
+from astral.api.client import TicketsAPI
 from astral.models import Ticket, Node, session, Stream
 from astral.models.tests.factories import (StreamFactory, NodeFactory,
         ThisNodeFactory, TicketFactory)
@@ -86,7 +86,7 @@ class TicketsHandlerTest(BaseTest):
         eq_(Ticket.query.count(), tickets_before + 1)
 
     def test_other_known_tickets(self):
-        mockito.when(Tickets).create(mockito.any(),
+        mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(True)
         stream = StreamFactory()
         existing_ticket = TicketFactory(stream=stream)
@@ -101,7 +101,7 @@ class TicketsHandlerTest(BaseTest):
         eq_(ticket.source, existing_ticket.destination)
 
     def test_remote_source(self):
-        mockito.when(Tickets).create(mockito.any(),
+        mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(True)
         stream = StreamFactory()
         tickets_before = Ticket.query.count()
@@ -112,7 +112,7 @@ class TicketsHandlerTest(BaseTest):
         eq_(Ticket.query.count(), tickets_before + 2)
 
     def test_none_available(self):
-        mockito.when(Tickets).create(mockito.any(),
+        mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(False)
         stream = StreamFactory()
         tickets_before = Ticket.query.count()

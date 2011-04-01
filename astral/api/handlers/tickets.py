@@ -2,7 +2,7 @@
 from tornado.web import HTTPError
 
 from astral.api.handlers.base import BaseHandler
-from astral.api.client import Tickets
+from astral.api.client import TicketsAPI
 from astral.models import Ticket, Node, Stream, session
 from astral.exceptions import NetworkError
 
@@ -19,7 +19,7 @@ class TicketsHandler(BaseHandler):
 
     def _request_stream_from_node(self, stream, node, destination=None):
         try:
-            created = Tickets(node.uri()).create(stream.tickets_url(),
+            created = TicketsAPI(node.uri()).create(stream.tickets_url(),
                     destination_uuid=Node.me().uuid)
         except NetworkError, e:
             log.info("Couldn't connect to %s to ask for %s -- deleting "
