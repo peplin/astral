@@ -42,6 +42,13 @@ class LocalNode(object):
             NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
                     self.node.absolute_url())
 
+        # TODO can't get this if we had a KeyboardInterrupt, session is dead
+        if self.node.primary_supernode:
+            log.info("Unregistering %s from our primary supernode (%s)",
+                    self.node.primary_supernode)
+            NodesAPI(self.node.primary_supernode.uri()).unregister(
+                    self.node.absolute_url())
+
     class BootstrapThread(threading.Thread):
         """Runs once at node startup to build knowledge of the network."""
 
