@@ -25,12 +25,22 @@ class LocalNode(object):
         self.load_this_node(uuid_override)
         self.BootstrapThread(self.node).start()
         self.DaemonThread().start()
-        astral.api.app.run()
+        try:
+            astral.api.app.run()
+        except: # tolerate the bare accept here to make sure we always shutdown
+            self.shutdown()
 
     def load_this_node(self, uuid_override):
         if not getattr(self, 'node', None):
             self.node = Node.me(uuid_override=uuid_override)
             session.commit()
+
+    def shutdown(self):
+        if self.node.supernode:
+            log.info("Unregistering ourself (%s) from the web server",
+                    self.node)
+            NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
+                    self.node.absolute_url())
 
     class BootstrapThread(threading.Thread):
         """Runs once at node startup to build knowledge of the network."""

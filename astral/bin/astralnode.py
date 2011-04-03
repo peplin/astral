@@ -20,7 +20,7 @@ class NodeCommand(Command):
         return (
             Option('-u', '--uuid',
                 default=None,
-                action="store", dest="uuid",
+                action="store", dest="uuid_override",
                 help="UUID override, for testing multiple nodes on one box"),
         )
 

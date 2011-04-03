@@ -58,8 +58,8 @@ class NodesAPI(NodeAPI):
     def register(self, payload=None):
         return super(NodesAPI, self).post('/nodes', payload=json.dumps(payload))
 
-    def unregister(self, node):
-        return super(NodesAPI, self).delete(node.absolute_url())
+    def unregister(self, node_url):
+        return super(NodesAPI, self).delete(node_url)
 
 
 class StreamsAPI(NodeAPI):

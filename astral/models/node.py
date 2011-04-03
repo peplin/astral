@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 class Node(BaseEntityMixin, Entity):
     ip_address = Field(Unicode(15))
-    uuid = Field(Integer, nullable=False, unique=True, primary_key=True)
+    uuid = Field(Unicode(64), nullable=False, unique=True, primary_key=True)
     port = Field(Integer)
     supernode = Field(Boolean, default=False)
     primary_supernode = ManyToOne('Node')
