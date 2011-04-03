@@ -22,32 +22,29 @@ class LocalNode(object):
     def run(self, uuid_override=None, **kwargs):
         # Kind of a hack to make sure logging is set up before we do anything
         settings.LOGGING_CONFIG
-        self.load_this_node(uuid_override)
-        self.BootstrapThread(self.node).start()
+        self.uuid = uuid_override
+        self.BootstrapThread(node=self.node).start()
         self.DaemonThread().start()
         try:
             astral.api.app.run()
         except: # tolerate the bare accept here to make sure we always shutdown
             self.shutdown()
 
-    def load_this_node(self, uuid_override):
-        if not getattr(self, 'node', None):
-            self.node = Node.me(uuid_override=uuid_override)
-            session.commit()
+    def node(self):
+        return Node.get_by(uuid=self.uuid) or Node.me(uuid_override=self.uuid)
 
     def shutdown(self):
-        if self.node.supernode:
+        if self.node().supernode:
             log.info("Unregistering ourself (%s) from the web server",
-                    self.node)
+                    self.node())
             NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
-                    self.node.absolute_url())
+                    self.node().absolute_url())
 
-        # TODO can't get this if we had a KeyboardInterrupt, session is dead
-        if self.node.primary_supernode:
+        if self.node().primary_supernode:
             log.info("Unregistering %s from our primary supernode (%s)",
-                    self.node.primary_supernode)
-            NodesAPI(self.node.primary_supernode.uri()).unregister(
-                    self.node.absolute_url())
+                    self.node().primary_supernode)
+            NodesAPI(self.node().primary_supernode.uri()).unregister(
+                    self.node().absolute_url())
 
     class BootstrapThread(threading.Thread):
         """Runs once at node startup to build knowledge of the network."""
@@ -71,7 +68,15 @@ class LocalNode(object):
                 log.warning("Can't connect to server: %s", e)
             else:
                 log.debug("Nodes returned from the server: %s", nodes)
-                nodes = [Node.from_dict(node) for node in nodes]
+                for node in nodes:
+                    if self.node().conflicts_with(node):
+                        log.warn("Received %s which conflicts with us (%s) "
+                                "-- telling web server to kill it")
+                        NodesAPI(base_url).unregister(
+                                Node.absolute_url(node['uuid']))
+                    else:
+                        node = Node.from_dict(node)
+                        log.info("Stored %s from %s", node, base_url)
 
         def register_with_supernode(self):
             Node.update_supernode_rtt()
@@ -79,28 +84,30 @@ class LocalNode(object):
             # SQLAlchemy session errors.
             session.commit()
             session.close_all()
-            self.node = Node.me()
-            if not self.node.supernode:
-                self.node.primary_supernode = Node.closest_supernode()
-                if not self.node.primary_supernode:
-                    self.node.supernode = True
+
+            if not self.node().supernode:
+                self.node().primary_supernode = Node.closest_supernode()
+                if not self.node().primary_supernode:
+                    self.node().supernode = True
+                    log.info("Registering %s as a supernode, none others found",
+                            self.node())
                     try:
                         NodesAPI(settings.ASTRAL_WEBSERVER).register(
-                                self.node.to_dict())
+                                self.node().to_dict())
                     except NetworkError, e:
                         log.warning("Can't connect to server to register as a "
                                 "supernode: %s", e)
                 else:
                     try:
-                        NodesAPI(self.node.primary_supernode.uri()).register(
-                                self.node.to_dict())
+                        NodesAPI(self.node().primary_supernode.uri()).register(
+                                self.node().to_dict())
                     except NetworkError, e:
                         # TODO try another?
                         log.warning("Can't connect to supernode %s to register"
-                                ": %s", self.node.primary_supernode, e)
+                                ": %s", self.node().primary_supernode, e)
                     else:
                         self.load_dynamic_bootstrap_nodes(
-                                self.node.primary_supernode.uri())
+                                self.node().primary_supernode.uri())
             else:
                 # TODO register with all (some?) other supernodes. supernode
                 # cool kids club.

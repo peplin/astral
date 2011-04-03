@@ -4,6 +4,7 @@ from elixir.events import after_insert
 from sqlalchemy import UniqueConstraint
 import uuid
 import socket
+from urlparse import urlparse
 import json
 
 from astral.exceptions import NetworkError
@@ -96,14 +97,14 @@ class Node(BaseEntityMixin, Entity):
 
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect((settings.ASTRAL_WEBSERVER, 80))
+                parsed_url = urlparse(settings.ASTRAL_WEBSERVER)
+                s.connect((parsed_url.hostname, parsed_url.port))
             except socket.gaierror, e:
                 log.debug("Couldn't connect to the Astral webserver: %s", e)
                 node.ip_address = '127.0.0.1'
             else:
-                node.ip_address = s.getsockname()
-            log.info("Using %s for this node's IP address",
-                    node.ip_address)
+                node.ip_address = s.getsockname()[0]
+            log.info("Using %s for this node's IP address", node.ip_address)
 
             node.port = settings.PORT
             log.info("Using %s for this node's API port", node.port)
@@ -112,8 +113,14 @@ class Node(BaseEntityMixin, Entity):
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
 
-    def absolute_url(self):
-        return '/node/%s' % self.uuid
+    def absolute_url(cls, uuid_override=None):
+        """This class does a bit of double duty, as both a class and instance
+        method. It's probably not great practice, but we'll try it out. The
+        point is to have the URL pattern only be in one place.
+        """
+        if isinstance(cls, Node):
+            uuid_override = uuid_override or cls.uuid
+        return '/node/%s' % uuid_override
 
     def to_dict(self):
         data = super(Node, self).to_dict()
@@ -121,9 +128,14 @@ class Node(BaseEntityMixin, Entity):
             data['primary_supernode_uuid'] = self.primary_supernode.uuid
         return data
 
+    def conflicts_with(self, data):
+        return (self.uuid != data['uuid'] and
+                self.ip_address == data['ip_address'] and
+                self.port == data['port'])
+
     @after_insert
     def emit_new_node_event(self):
         Event(message=json.dumps({'type': "node", 'data': self.to_dict()}))
 
     def __repr__(self):
-        return u'<Node %s:%s>' % (self.ip_address, self.port)
+        return u'<Node %s: %s:%s>' % (self.uuid, self.ip_address, self.port)
