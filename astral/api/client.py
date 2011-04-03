@@ -53,7 +53,7 @@ class NodeAPI(restkit.Resource):
 
 class NodesAPI(NodeAPI):
     def list(self, query=None):
-        return super(NodesAPI, self).get('/nodes', query)
+        return super(NodesAPI, self).get('/nodes', query)['nodes']
 
     def register(self, payload=None):
         return super(NodesAPI, self).post('/nodes', payload=json.dumps(payload))
@@ -64,7 +64,7 @@ class NodesAPI(NodeAPI):
 
 class StreamsAPI(NodeAPI):
     def list(self, query=None):
-        return super(StreamsAPI, self).get('/streams', query)
+        return super(StreamsAPI, self).get('/streams', query)['streams']
 
 
 class TicketsAPI(NodeAPI):
