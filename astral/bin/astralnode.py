@@ -18,10 +18,10 @@ class NodeCommand(Command):
 
     def get_options(self):
         return (
-            Option('-f', '--foobar',
-                default="some value",
-                action="store", dest="some_setting",
-                help="A setting"),
+            Option('-u', '--uuid',
+                default=None,
+                action="store", dest="uuid",
+                help="UUID override, for testing multiple nodes on one box"),
         )
 
 def main():
