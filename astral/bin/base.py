@@ -26,6 +26,10 @@ class Command(Daemon):
                     help="Name of the module to read settings from."),
             Option("-D", "--daemonize", action="store",
                     dest="daemonize", help="Daemonize the application"),
+            Option("-E", "--Exit", action="store",
+                    dest="Exit", help="Shut Down Server"),
+            Option("-B", "--Begin", action="store",
+                    dest="Begin", help="Start the Server"),
     )
 
     Parser = OptionParser

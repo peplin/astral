@@ -62,10 +62,14 @@ class Nodes(NodeAPI):
 
 class Streams(NodeAPI):
     def list(self, query=None):
-        return super(Nodes, self).get('/streams', query)
+        return super(Streams, self).get('/streams', query)
 
 
 class Tickets(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
         return super(Tickets, self).post(tickets_url,
                 payload=json.dumps({'destination_uuid': destination_uuid}))
+
+    def list(self, query=None):
+        return super(Tickets, self).get('/tickets', query) 
+               
