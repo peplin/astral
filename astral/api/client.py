@@ -23,8 +23,10 @@ class NodeAPI(restkit.Resource):
             raise NetworkError(e)
         else:
             body = response.body_string()
-            if body:
+            if body and response.headers.get('Content-Type'
+                    ) == "application/json":
                 return json.loads(body)
+            return body
 
     def ping(self):
         timer = timeit.Timer("NodeAPI('%s').get('/ping')" % self.uri,
@@ -49,27 +51,31 @@ class NodeAPI(restkit.Resource):
         return byte_count, timer.timeit(1)
 
 
-class Nodes(NodeAPI):
+class NodesAPI(NodeAPI):
     def list(self, query=None):
-        return super(Nodes, self).get('/nodes', query)
+        return super(NodesAPI, self).get('/nodes', query)['nodes']
 
     def register(self, payload=None):
-        return super(Nodes, self).post('/nodes', payload=json.dumps(payload))
+        return super(NodesAPI, self).post('/nodes', payload=json.dumps(payload))
 
-    def unregister(self, node):
-        return super(Nodes, self).delete(node.absolute_url())
+    def unregister(self, node_url):
+        return super(NodesAPI, self).delete(node_url)
 
 
-class Streams(NodeAPI):
+class StreamsAPI(NodeAPI):
     def list(self, query=None):
-        return super(Streams, self).get('/streams', query)
+         return super(StreamsAPI, self).get('/streams', query)['streams']
 
 
-class Tickets(NodeAPI):
+class TicketsAPI(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
-        return super(Tickets, self).post(tickets_url,
-                payload=json.dumps({'destination_uuid': destination_uuid}))
+        response = super(TicketsAPI, self).post(tickets_url, payload=json.dumps(
+            {'destination_uuid': destination_uuid}))
+        return response.status == 200
 
     def list(self, query=None):
         return super(Tickets, self).get('/tickets', query) 
                
+
+        
+

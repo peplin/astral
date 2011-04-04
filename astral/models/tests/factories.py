@@ -24,6 +24,14 @@ class NodeFactory(factory.Factory):
     uuid = factory.LazyAttribute(lambda a: random.randrange(1000, 1000000))
     port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
 
+class SupernodeFactory(factory.Factory):
+    FACTORY_FOR = Node
+
+    ip_address = factory.LazyAttribute(lambda a: faker.internet.ip_address())
+    uuid = factory.LazyAttribute(lambda a: random.randrange(1000, 1000000))
+    port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
+    supernode = True
+
 
 class ThisNodeFactory(factory.Factory):
     FACTORY_FOR = Node

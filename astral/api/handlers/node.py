@@ -1,6 +1,6 @@
 from astral.api.handlers.base import BaseHandler
 from astral.models.node import Node
-from astral.api.client import Nodes
+from astral.api.client import NodesAPI
 
 import logging
 log = logging.getLogger(__name__)
@@ -17,4 +17,4 @@ class NodeHandler(BaseHandler):
         if closest_supernode:
             log.info("Notifying closest supernode %s that %s was deleted",
                     closest_supernode, node)
-            Nodes(closest_supernode.absolute_url()).delete(node)
+            NodesAPI(closest_supernode.absolute_url()).delete(node)
