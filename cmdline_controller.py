@@ -1,10 +1,16 @@
 import sys
-from astral.api.client import Streams
-from astral.api.client import Nodes
-from astral.api.client import Tickets
+from astral.api.client import StreamsAPI
+from astral.api.client import NodesAPI
+from astral.api.client import TicketsAPI
 import json
 from astral.api.client import NodeAPI
 from astral.conf import settings
+from astral.node.base import LocalNode
+from astral.bin.astralnode import NodeCommand
+from astral.api.handlers.node import NodeHandler
+from astral.models.node import Node
+
+LOCAL_SERVER = "http://localhost:8000"
 
 class Cmdline():
        
@@ -47,21 +53,23 @@ class Cmdline():
         print "Selected option = ", arg
         # create JSON message and send to server
 	#obj_temp = json.JSONEncoder().encode({ "url": "/stream" })
-        print "List of streams: " , Streams(settings.ASTRAL_WEBSERVER).list()
+        print "List of streams: " , StreamsAPI(LOCAL_SERVER).list()
 
     def listtickets(self,arg):
         print "Selected option = ", arg
         # create JSON message and send to server
-        print "List of tickets: " , Tickets(settings.ASTRAL_WEBSERVER).list()
+        print "List of tickets: " , TicketsAPI(LOCAL_SERVER).list()
 
     def listnodes(self,arg):
         print "Selected option = ", arg
         # create JSON message and send to server
-        print "List of nodes: ", Nodes(settings.ASTRAL_WEBSERVER).list()
+        print "List of nodes: ", NodesAPI(LOCAL_SERVER).list()
 
     def start(self,arg):
         print "Selected option = ", arg
         # create JSON message and send to server
+        start = NodeCommand()
+        start.run()
 
     def stream(self,arg):
         print "Selected option = ", arg
@@ -74,6 +82,9 @@ class Cmdline():
     def shutdown(self,arg):
         print "Selected option = ", arg      
         # create JSON message and send to server
+	shut = NodesAPI(LOCAL_SERVER)
+        url = Node()
+        shut.unregister(url.absolute_url())
 
 def main():
     cmd = Cmdline()
