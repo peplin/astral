@@ -41,13 +41,16 @@ class Cmdline():
             elif argv[1]=='-ln' or argv[1]== 'listnodes':
                 self.listnodes(argv[1])
 
+            elif argv[1]=='-rt' or argv[1]== 'revoketicket':
+                self.revokeTicket(argv[1])
+
             elif argv[1]=='-s' or argv[1]== 'start':
                 self.start(argv[1])
 
            
         
     def usage(self):
-        print "Usage: python   cmdline_controller.py    start/stream/watch uri /shutdown/liststreams/listtickets/listnodes/ or -s/-st/-w uri /-sh/-ls/-lt/-ln"
+        print "Usage: python   cmdline_controller.py    start/stream/watch uri /shutdown/liststreams/listtickets/listnodes/revoketicket ticketIdentification or -s/- st/-w uri /-sh/-ls/-lt/-ln/-rt identification"
 
     def liststreams(self,arg):
         print "Selected option = ", arg
@@ -76,6 +79,10 @@ class Cmdline():
         # create JSON message and send to server
 
     def watch(self,arg):
+        print "Selected option = ", arg       
+        # create JSON message and send to server
+
+    def revokeTicket(self,arg):
         print "Selected option = ", arg       
         # create JSON message and send to server
 
