@@ -58,7 +58,9 @@ class NodesAPI(NodeAPI):
     def register(self, payload=None):
         return super(NodesAPI, self).post('/nodes', payload=json.dumps(payload))
 
-    def unregister(self, node_url):
+    def unregister(self, node_url=None):
+        if node_url == None:
+           node_url = '/node'
         return super(NodesAPI, self).delete(node_url)
 
 
@@ -74,7 +76,7 @@ class TicketsAPI(NodeAPI):
         return response.status == 200
 
     def list(self, query=None):
-        return super(Tickets, self).get('/tickets', query) 
+        return super(TicketsAPI, self).get('/tickets', query) ['tickets']
                
 
         

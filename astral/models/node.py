@@ -118,6 +118,8 @@ class Node(BaseEntityMixin, Entity):
         method. It's probably not great practice, but we'll try it out. The
         point is to have the URL pattern only be in one place.
         """
+        if uuid_override== '':
+            uuid_override = Node.me()
         if isinstance(cls, Node):
             uuid_override = uuid_override or cls.uuid
         return '/node/%s' % uuid_override

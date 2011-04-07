@@ -90,8 +90,9 @@ class Cmdline():
         print "Selected option = ", arg      
         # create JSON message and send to server
 	shut = NodesAPI(LOCAL_SERVER)
-        url = Node()
-        shut.unregister(url.absolute_url())
+        #url = Node()
+        shut.unregister()
+        #raise KeyboardInterrupt
 
 def main():
     cmd = Cmdline()

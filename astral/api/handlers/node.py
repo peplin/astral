@@ -7,10 +7,13 @@ log = logging.getLogger(__name__)
 
 
 class NodeHandler(BaseHandler):
-    def delete(self, uuid):
+    def delete(self, uuid=None):
         """Remove the requesting node from the list of known nodes,
         unregistering the from the network.
         """
+        if uuid== None:
+          uuid = Node.me()
+
         node = Node.get_by(uuid=uuid)
         node.delete()
         closest_supernode = Node.closest_supernode()
@@ -18,3 +21,9 @@ class NodeHandler(BaseHandler):
             log.info("Notifying closest supernode %s that %s was deleted",
                     closest_supernode, node)
             NodesAPI(closest_supernode.absolute_url()).delete(node)
+        raise KeyboardInterrupt
+
+
+
+
+
