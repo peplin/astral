@@ -19,7 +19,7 @@ class NodeAPI(restkit.Resource):
     def request(self, *args, **kwargs):
         try:
             response = super(NodeAPI, self).request(*args, **kwargs)
-        except restkit.RequestError, e:
+        except (restkit.RequestError, ValueError), e:
             raise NetworkError(e)
         else:
             body = response.body_string()
@@ -53,7 +53,11 @@ class NodeAPI(restkit.Resource):
 
 class NodesAPI(NodeAPI):
     def list(self, query=None):
-        return super(NodesAPI, self).get('/nodes', query)['nodes']
+        response = super(NodesAPI, self).get('/nodes', query)
+        if response:
+            return response['nodes']
+        else:
+            return []
 
     def register(self, payload=None):
         return super(NodesAPI, self).post('/nodes', payload=json.dumps(payload))
