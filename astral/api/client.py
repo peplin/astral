@@ -7,6 +7,9 @@ import string
 from astral.conf import settings
 from astral.exceptions import NetworkError
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class NodeAPI(restkit.Resource):
     def __init__(self, uri, **kwargs):
