@@ -66,7 +66,7 @@ class NodesAPI(NodeAPI):
 
 class StreamsAPI(NodeAPI):
     def list(self, query=None):
-         return super(StreamsAPI, self).get('/streams', query)['streams']
+        return super(StreamsAPI, self).get('/streams', query)['streams']
 
 
 class TicketsAPI(NodeAPI):
@@ -76,8 +76,4 @@ class TicketsAPI(NodeAPI):
         return response.status == 200
 
     def list(self, query=None):
-        return super(TicketsAPI, self).get('/tickets', query) ['tickets']
-               
-
-        
-
+        return super(TicketsAPI, self).get('/tickets', query)['tickets']
