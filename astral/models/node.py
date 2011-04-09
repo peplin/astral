@@ -89,10 +89,11 @@ class Node(BaseEntityMixin, Entity):
 
     @classmethod
     def me(cls, uuid_override=None):
-        node = Node.get_by(uuid=uuid_override or uuid.getnode())
+        desired_uuid = uuid_override or unicode(uuid.getnode())
+        node = Node.get_by(uuid=desired_uuid)
         if not node:
             node = Node()
-            node.uuid = uuid_override or uuid.getnode()
+            node.uuid = desired_uuid
             log.info("Using %s for this node's unique ID", node.uuid)
 
             try:

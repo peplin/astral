@@ -3,12 +3,12 @@ from tornado.httpclient import HTTPRequest
 
 from astral.api.tests import BaseTest
 from astral.models import Ticket, Stream, Node
-from astral.models.tests.factories import TicketFactory, ThisNodeFactory
+from astral.models.tests.factories import TicketFactory
 
 class TicketHandlerTest(BaseTest):
     def test_delete(self):
-        ThisNodeFactory()
-        ticket = TicketFactory(destination=Node.me())
+        node = Node.me()
+        ticket = TicketFactory(destination=node)
         self.http_client.fetch(HTTPRequest(
             self.get_url(ticket.absolute_url()), 'DELETE'), self.stop)
         response = self.wait()

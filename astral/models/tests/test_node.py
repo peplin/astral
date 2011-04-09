@@ -80,13 +80,3 @@ class NodeUpstreamTest(BaseNodeTest):
         upstream = self.node.update_upstream()
         ok_(upstream < 100)
         ok_(upstream > 10)
-
-
-class NodePrimarySupernodeTest(BaseNodeTest):
-    def test_updates_to_only_choice(self):
-        mockito.when(NodeAPI).ping().thenReturn(42)
-        supernode = SupernodeFactory()
-        eq_(self.node.primary_supernode, None)
-        self.node.update_primary_supernode()
-        self.node.primary_supernode = Node.closest_supernode()
-        eq_(self.node.primary_supernode, supernode)

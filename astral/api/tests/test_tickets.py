@@ -7,12 +7,11 @@ from astral.api.tests import BaseTest
 from astral.api.client import TicketsAPI
 from astral.models import Ticket, Node, session, Stream
 from astral.models.tests.factories import (StreamFactory, NodeFactory,
-        ThisNodeFactory, TicketFactory)
+        TicketFactory)
 
 class TicketsHandlerTest(BaseTest):
     def setUp(self):
         super(TicketsHandlerTest, self).setUp()
-        ThisNodeFactory()
         session.commit()
 
     def test_create(self):
