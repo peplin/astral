@@ -42,7 +42,7 @@ class LocalNode(object):
 
         if self.node().primary_supernode:
             log.info("Unregistering %s from our primary supernode (%s)",
-                    self.node().primary_supernode)
+                    self.node(), self.node().primary_supernode)
             NodesAPI(self.node().primary_supernode.uri()).unregister(
                     self.node().absolute_url())
 
