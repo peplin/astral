@@ -34,7 +34,11 @@ LOGGING = {
     'use_syslog': USE_SYSLOG,
 }
 
-ASTRAL_WEBSERVER = "http://localhost:4567"
+if DEBUG:
+    ASTRAL_WEBSERVER = "http://localhost:4567"
+else:
+    ASTRAL_WEBSERVER = "http://astral-video.heroku.com"
+
 BOOTSTRAP_NODES = [
 ]
 
