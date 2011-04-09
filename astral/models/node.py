@@ -99,7 +99,7 @@ class Node(BaseEntityMixin, Entity):
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 parsed_url = urlparse(settings.ASTRAL_WEBSERVER)
-                s.connect((parsed_url.hostname, parsed_url.port))
+                s.connect((parsed_url.hostname, parsed_url.port or 80))
             except socket.gaierror, e:
                 log.debug("Couldn't connect to the Astral webserver: %s", e)
                 node.ip_address = '127.0.0.1'
