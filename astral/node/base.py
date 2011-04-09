@@ -63,7 +63,7 @@ class LocalNode(object):
         def load_dynamic_bootstrap_nodes(self, base_url=None):
             base_url = base_url or settings.ASTRAL_WEBSERVER
             try:
-                nodes = NodesAPI(base_url, timeout=2, max_tries=1).list()
+                nodes = NodesAPI(base_url).list()
             except NetworkError, e:
                 log.warning("Can't connect to server: %s", e)
             else:

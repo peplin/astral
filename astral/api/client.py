@@ -10,6 +10,8 @@ from astral.exceptions import NetworkError
 
 class NodeAPI(restkit.Resource):
     def __init__(self, uri, **kwargs):
+        kwargs.setdefault('timeout', 2)
+        kwargs.setdefault('max_tries', 1)
         super(NodeAPI, self).__init__(uri, **kwargs)
 
     def make_headers(self, headers):
