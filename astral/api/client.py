@@ -40,7 +40,7 @@ class NodeAPI(restkit.Resource):
 
     def downstream_check(self, byte_count=None):
         byte_count = byte_count or settings.DOWNSTREAM_CHECK_LIMIT
-        timer = timeit.Timer("NodeAPI('%s').get('/ping', {'bytes': %s})"
+        timer = timeit.Timer("NodeAPI('%s').get('/ping', bytes=%s)"
                 % (self.uri, byte_count),
                 "from astral.api.client import NodeAPI")
         return byte_count, timer.timeit(1)
