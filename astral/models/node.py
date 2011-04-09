@@ -113,13 +113,11 @@ class Node(BaseEntityMixin, Entity):
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
 
-    def absolute_url(cls, uuid_override=None):
+    def absolute_url(cls, uuid_override=''):
         """This class does a bit of double duty, as both a class and instance
         method. It's probably not great practice, but we'll try it out. The
         point is to have the URL pattern only be in one place.
         """
-        if uuid_override== '':
-            uuid_override = Node.me()
         if isinstance(cls, Node):
             uuid_override = uuid_override or cls.uuid
         return '/node/%s' % uuid_override
