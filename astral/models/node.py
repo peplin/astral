@@ -3,14 +3,12 @@ from elixir import (Field, Unicode, Integer, Entity, Boolean,
 from elixir.events import after_insert
 from sqlalchemy import UniqueConstraint
 import uuid
-import socket
-from urlparse import urlparse
 import json
 
 from astral.exceptions import NetworkError
 from astral.models.base import BaseEntityMixin
 from astral.models.event import Event
-from astral.api.client import NodeAPI
+from astral.api.client import NodeAPI, RemoteIP
 from astral.conf import settings
 
 import logging
@@ -97,14 +95,10 @@ class Node(BaseEntityMixin, Entity):
             log.info("Using %s for this node's unique ID", node.uuid)
 
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                parsed_url = urlparse(settings.ASTRAL_WEBSERVER)
-                s.connect((parsed_url.hostname, parsed_url.port or 80))
-            except socket.gaierror, e:
-                log.debug("Couldn't connect to the Astral webserver: %s", e)
+                node.ip_address = RemoteIP().get()
+            except NetworkError, e:
+                log.debug("Couldn't connect to the web: %s", e)
                 node.ip_address = '127.0.0.1'
-            else:
-                node.ip_address = s.getsockname()[0]
             log.info("Using %s for this node's IP address", node.ip_address)
 
             node.port = settings.PORT

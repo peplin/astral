@@ -10,7 +10,7 @@ from astral.exceptions import NetworkError
 
 class NodeAPI(restkit.Resource):
     def __init__(self, uri, **kwargs):
-        kwargs.setdefault('timeout', 2)
+        kwargs.setdefault('timeout', 3)
         kwargs.setdefault('max_tries', 1)
         super(NodeAPI, self).__init__(uri, **kwargs)
 
@@ -54,8 +54,8 @@ class NodeAPI(restkit.Resource):
 
 
 class NodesAPI(NodeAPI):
-    def list(self, query=None):
-        response = super(NodesAPI, self).get('/nodes', query)
+    def list(self):
+        response = super(NodesAPI, self).get('/nodes')
         if response:
             return response['nodes']
         else:
@@ -71,8 +71,8 @@ class NodesAPI(NodeAPI):
 
 
 class StreamsAPI(NodeAPI):
-    def list(self, query=None):
-        return super(StreamsAPI, self).get('/streams', query)['streams']
+    def list(self):
+        return super(StreamsAPI, self).get('/streams')['streams']
 
 
 class TicketsAPI(NodeAPI):
@@ -81,5 +81,12 @@ class TicketsAPI(NodeAPI):
             {'destination_uuid': destination_uuid}))
         return response.status == 200
 
-    def list(self, query=None):
-        return super(TicketsAPI, self).get('/tickets', query)['tickets']
+    def list(self):
+        return super(TicketsAPI, self).get('/tickets')['tickets']
+
+class RemoteIP(NodeAPI):
+    def __init__(self):
+        super(RemoteIP, self).__init__('http://jsonip.com')
+
+    def get(self):
+        return super(RemoteIP, self).get()['ip']
