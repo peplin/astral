@@ -67,7 +67,10 @@ class NodesAPI(NodeAPI):
     def unregister(self, node_url=None):
         if node_url == None:
            node_url = '/node'
-        return super(NodesAPI, self).delete(node_url)
+        try:
+            return super(NodesAPI, self).delete(node_url)
+        except NetworkError, e:
+            log.warning("Can't connect to server: %s", e)
 
 
 class StreamsAPI(NodeAPI):

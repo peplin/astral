@@ -37,11 +37,8 @@ class LocalNode(object):
         if self.node().supernode:
             log.info("Unregistering ourself (%s) from the web server",
                     self.node())
-            try:
-                NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
-                        self.node().absolute_url())
-            except NetworkError, e:
-                log.warning("Can't connect to server: %s", e)
+            NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
+                    self.node().absolute_url())
 
         if self.node().primary_supernode:
             log.info("Unregistering %s from our primary supernode (%s)",
