@@ -21,7 +21,7 @@ class NodeHandler(BaseHandler):
         if closest_supernode:
             log.info("Notifying closest supernode %s that %s was deleted",
                     closest_supernode, node)
-            NodesAPI(closest_supernode.absolute_url()).delete(node)
+            NodesAPI(closest_supernode.absolute_url()).unregister(node)
 
         if node == Node.me():
             # TODO kind of a shortcut to shutting down, but should be a bit more
