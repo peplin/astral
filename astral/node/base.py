@@ -49,6 +49,11 @@ class LocalNode(object):
             NodesAPI(self.node().primary_supernode.uri()).unregister(
                     self.node().absolute_url())
 
+    def _unregister_from_all(self):
+        for node in Node.not_me():
+            log.info("Unregistering from %s", node)
+            NodesAPI(node.uri()).unregister(self.node().absolute_url())
+
     def _cancel_tickets(self):
         for ticket in Ticket.query.filter_by(source=Node.me()):
             log.info("Cancelling %s", ticket)
@@ -62,6 +67,7 @@ class LocalNode(object):
         self._unregister_from_origin()
         self._unregister_from_supernode()
         self._cancel_tickets()
+        self._unregister_from_all()
 
     class UpstreamCheckThread(threading.Thread):
         """Runs once at node startup to check the total upstream to the origin

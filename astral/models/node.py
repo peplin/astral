@@ -105,6 +105,10 @@ class Node(BaseEntityMixin, Entity):
             log.info("Using %s for this node's API port", node.port)
         return node
 
+    @classmethod
+    def not_me(cls):
+        return cls.query.filter(Node.uuid != Node.me().uuid).all()
+
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
 
