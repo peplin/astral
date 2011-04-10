@@ -1,9 +1,11 @@
-
+from astral.conf import settings
 from astral.api.handlers.base import BaseHandler
-from astral.models.stream import Stream
+from astral.api.client import StreamsAPI
+from astral.models import Stream, Node
+from astral.exceptions import NetworkError
 
 import logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class StreamsHandler(BaseHandler):
@@ -14,10 +16,13 @@ class StreamsHandler(BaseHandler):
 
     def post(self):
         """Register a new available stream."""
-        # TODO this might be not neccessary, if everyone goes back to the www
-        # server to get the list of streams. another way it could work is that
-        # the web server pushes out new stream notifications to supernodes, and
-        # other nodes just ask the supernodes. the activity is triggered by user
-        # typing in a name in the command line or clicking on a link in the
-        # browser, so the request from that client could just be propagated back
-        # to a node that has heard of it. hmm. needs some thought.
+        self.get_json_argument('name')
+        self.request.arguments['source'] = Node.me()
+        stream = Stream.from_dict(self.request.arguments)
+        try:
+            StreamsAPI(settings.ASTRAL_WEBSERVER).create(
+                    source_uuid=stream.source.uuid, name=stream.name,
+                    description=stream.description)
+        except NetworkError, e:
+            log.warning("Unable to register stream with origin webserver: %s",
+                    e)

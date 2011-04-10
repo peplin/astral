@@ -59,37 +59,41 @@ class NodeAPI(restkit.Resource):
 
 class NodesAPI(NodeAPI):
     def list(self):
-        response = super(NodesAPI, self).get('/nodes')
+        response = self.get('/nodes')
         if response:
             return response['nodes']
         else:
             return []
 
     def register(self, payload=None):
-        return super(NodesAPI, self).post('/nodes', payload=json.dumps(payload))
+        return self.post('/nodes', payload=json.dumps(payload))
 
     def unregister(self, node_url=None):
         if node_url == None:
            node_url = '/node'
         try:
-            return super(NodesAPI, self).delete(node_url)
+            return self.delete(node_url)
         except NetworkError, e:
             log.warning("Can't connect to server: %s", e)
 
 
 class StreamsAPI(NodeAPI):
     def list(self):
-        return super(StreamsAPI, self).get('/streams')['streams']
+        return self.get('/streams').body['streams']
+
+    def create(self, **kwargs):
+        response = self.post('/streams', payload=json.dumps(kwargs))
+        return response.status == 200
 
 
 class TicketsAPI(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
-        response = super(TicketsAPI, self).post(tickets_url, payload=json.dumps(
+        response = self.post(tickets_url, payload=json.dumps(
             {'destination_uuid': destination_uuid}))
         return response.status == 200
 
     def list(self):
-        return super(TicketsAPI, self).get('/tickets')['tickets']
+        return self.get('/tickets').body['tickets']
 
 class RemoteIP(NodeAPI):
     def __init__(self):
