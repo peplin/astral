@@ -9,10 +9,10 @@ import threading
 import json
 
 import astral.api.app
-from astral.models import Node, session, Event
+from astral.models import Node, session, Event, Ticket
 from astral.conf import settings
 from astral.exceptions import NetworkError
-from astral.api.client import NodesAPI
+from astral.api.client import NodesAPI, TicketsAPI
 
 import logging
 log = logging.getLogger(__name__)
@@ -35,18 +35,33 @@ class LocalNode(object):
     def node(self):
         return Node.get_by(uuid=self.uuid) or Node.me(uuid_override=self.uuid)
 
-    def shutdown(self):
+    def _unregister_from_origin(self):
         if self.node().supernode:
             log.info("Unregistering ourself (%s) from the web server",
                     self.node())
             NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
                     self.node().absolute_url())
 
+    def _unregister_from_supernode(self):
         if self.node().primary_supernode:
             log.info("Unregistering %s from our primary supernode (%s)",
                     self.node(), self.node().primary_supernode)
             NodesAPI(self.node().primary_supernode.uri()).unregister(
                     self.node().absolute_url())
+
+    def _cancel_tickets(self):
+        for ticket in Ticket.query.filter_by(source=Node.me()):
+            log.info("Cancelling %s", ticket)
+            TicketsAPI(ticket.destination.uri()).delete(ticket.absolute_url())
+
+        for ticket in Ticket.query.filter_by(destination=Node.me()):
+            log.info("Cancelling %s", ticket)
+            TicketsAPI(ticket.source.uri()).delete(ticket.absolute_url())
+
+    def shutdown(self):
+        self._unregister_from_origin()
+        self._unregister_from_supernode()
+        self._cancel_tickets()
 
     class UpstreamCheckThread(threading.Thread):
         """Runs once at node startup to check the total upstream to the origin
