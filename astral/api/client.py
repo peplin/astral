@@ -95,6 +95,13 @@ class TicketsAPI(NodeAPI):
     def list(self):
         return self.get('/tickets').body['tickets']
 
+    def cancel(self, ticket_url):
+        try:
+            return self.delete(ticket_url)
+        except NetworkError, e:
+            log.warning("Can't connect to server: %s", e)
+
+
 class RemoteIP(NodeAPI):
     def __init__(self):
         super(RemoteIP, self).__init__('http://jsonip.appspot.com')
