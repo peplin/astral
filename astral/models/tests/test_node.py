@@ -48,7 +48,7 @@ class NodeDownstreamTest(BaseNodeTest):
         mockito.when(NodeAPI).downstream_check().thenReturn((100, 10.0))
         eq_(self.node.downstream, None)
         downstream = self.node.update_downstream()
-        eq_(downstream, 100 / 10.0)
+        eq_(downstream, 100 / 10.0 / 1000.0)
         eq_(self.node.downstream, downstream)
 
     def test_weighted_downstream(self):
@@ -71,7 +71,7 @@ class NodeUpstreamTest(BaseNodeTest):
         mockito.when(NodeAPI).upstream_check().thenReturn((100, 10.0))
         eq_(self.node.upstream, None)
         upstream = self.node.update_upstream()
-        eq_(upstream, 100 / 10.0)
+        eq_(upstream, 100 / 10.0 / 1000.0)
         eq_(self.node.upstream, upstream)
 
     def test_weighted_upstream(self):

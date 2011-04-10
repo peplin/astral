@@ -22,6 +22,10 @@ class NodeCommand(Command):
                 default=None,
                 action="store", dest="uuid_override",
                 help="UUID override, for testing multiple nodes on one box"),
+            Option('-l', '--upstream-limit',
+                default=None,
+                action="store", dest="upstream_limit",
+                help="Maximum upload bandwidth to use for forwarding streams"),
         )
 
 def main():

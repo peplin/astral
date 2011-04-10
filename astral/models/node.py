@@ -22,8 +22,8 @@ class Node(BaseEntityMixin, Entity):
     supernode = Field(Boolean, default=False)
     primary_supernode = ManyToOne('Node')
     rtt = Field(Integer)
-    upstream = Field(Integer)
-    downstream = Field(Integer)
+    upstream = Field(Integer) # KB/s
+    downstream = Field(Integer) # KB/s
 
     using_table_options(UniqueConstraint('ip_address', 'port'))
 
@@ -52,13 +52,13 @@ class Node(BaseEntityMixin, Entity):
     def update_downstream(self):
         byte_count, transfer_time = NodeAPI(self.uri()).downstream_check()
         self.downstream = self._weighted_average(self.downstream,
-                self.BANDWIDTH_STEP, byte_count / transfer_time)
+                self.BANDWIDTH_STEP, byte_count / transfer_time / 1000.0)
         return self.downstream
 
-    def update_upstream(self):
-        byte_count, transfer_time = NodeAPI(self.uri()).upstream_check()
+    def update_upstream(self, url=None):
+        byte_count, transfer_time = NodeAPI(url or self.uri()).upstream_check()
         self.upstream = self._weighted_average(self.upstream,
-                self.BANDWIDTH_STEP, byte_count / transfer_time)
+                self.BANDWIDTH_STEP, byte_count / transfer_time / 1000.0)
         return self.upstream
 
     def _weighted_average(self, estimated, step, sample):

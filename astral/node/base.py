@@ -19,11 +19,13 @@ log = logging.getLogger(__name__)
 
 
 class LocalNode(object):
-    def run(self, uuid_override=None, **kwargs):
+    def run(self, uuid_override=None, upstream_limit=None, **kwargs):
         # Kind of a hack to make sure logging is set up before we do anything
         settings.LOGGING_CONFIG
+        self.upstream_limit = upstream_limit
         self.uuid = uuid_override
-        self.BootstrapThread(node=self.node).start()
+        self.BootstrapThread(node=self.node,
+                upstream_limit=self.upstream_limit).start()
         self.DaemonThread().start()
         try:
             astral.api.app.run()
@@ -46,12 +48,36 @@ class LocalNode(object):
             NodesAPI(self.node().primary_supernode.uri()).unregister(
                     self.node().absolute_url())
 
+    class UpstreamCheckThread(threading.Thread):
+        """Runs once at node startup to check the total upstream to the origin
+        server.
+        """
+        def __init__(self, node, upstream_limit):
+            super(LocalNode.UpstreamCheckThread, self).__init__()
+            self.node = node
+            self.upstream_limit = upstream_limit
+
+        def run(self):
+            if not self.upstream_limit:
+                try:
+                    self.node().update_upstream(settings.ASTRAL_WEBSERVER)
+                    log.info("Determined maximum upstream bandwidth to be "
+                            "%d KB/s", self.node().upstream)
+                except NetworkError:
+                    log.warning("Unable to connect to origin webserver to "
+                            "determine upstream bandwidth")
+            else:
+                self.node().upstream = self.upstream_limit
+                log.info("Using manually specified maximum upstream %s KB/s",
+                        self.node().upstream)
+
     class BootstrapThread(threading.Thread):
         """Runs once at node startup to build knowledge of the network."""
 
-        def __init__(self, node):
+        def __init__(self, node, upstream_limit):
             super(LocalNode.BootstrapThread, self).__init__()
             self.node = node
+            self.upstream_limit = upstream_limit
 
         def load_static_bootstrap_nodes(self):
             log.info("Loading static bootstrap nodes %s",
@@ -116,6 +142,7 @@ class LocalNode(object):
             session.commit()
 
         def run(self):
+            LocalNode.UpstreamCheckThread(self.node, self.upstream_limit).run()
             self.load_static_bootstrap_nodes()
             self.load_dynamic_bootstrap_nodes()
             self.register_with_supernode()
