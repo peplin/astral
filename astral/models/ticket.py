@@ -1,4 +1,4 @@
-from elixir import ManyToOne, Entity
+from elixir import ManyToOne, Entity, Boolean, Field
 from elixir.events import after_insert
 import json
 
@@ -11,6 +11,7 @@ class Ticket(Entity, BaseEntityMixin):
     source = ManyToOne('Node')
     destination = ManyToOne('Node')
     stream = ManyToOne('Stream')
+    confirmed = Field(Boolean, default=False)
 
     def __init__(self, source=None, destination=None, *args, **kwargs):
         source = source or Node.me()
