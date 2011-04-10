@@ -157,9 +157,14 @@ class LocalNode(object):
                         self.load_dynamic_bootstrap_nodes(
                                 self.node().primary_supernode.uri())
             else:
-                # TODO register with all (some?) other supernodes. supernode
-                # cool kids club.
-                pass
+                for supernode in Node.supernodes():
+                    try:
+                        NodesAPI(supernode.uri()).register(
+                                self.node().to_dict())
+                    except NetworkError, e:
+                        log.warning("Can't connect to supernode %s: %s",
+                                supernode, e)
+                        supernode.delete()
             session.commit()
 
         def run(self):
