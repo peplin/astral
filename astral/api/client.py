@@ -101,6 +101,16 @@ class TicketsAPI(NodeAPI):
         except NetworkError, e:
             log.warning("Can't connect to server: %s", e)
 
+    def confirm(self, ticket_url):
+        try:
+            response = self.put(ticket_url, payload=json.dumps(
+                {'confirmed': True}))
+        except NetworkError:
+            return False
+        else:
+            return response.status == 200
+
+
 
 class RemoteIP(NodeAPI):
     def __init__(self):

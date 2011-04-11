@@ -2,7 +2,7 @@ from astral.api.handlers.base import BaseHandler
 from astral.models import Ticket, Node
 
 import logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class TicketHandler(BaseHandler):
@@ -30,3 +30,11 @@ class TicketHandler(BaseHandler):
         ticket = self._load_ticket(stream_id, destination_uuid)
         if ticket:
             self.write({'ticket': ticket.to_dict()})
+
+    def put(self, stream_id, destination_uuid=None):
+        """Edit tickets, most likely just confirming them."""
+        ticket = self._load_ticket(stream_id, destination_uuid)
+        if ticket:
+            ticket.confirmed = self.get_json_argument('confirmed')
+            if ticket.confirmed:
+                log.info("Confirmed %s", ticket)
