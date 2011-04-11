@@ -42,7 +42,7 @@ class Cmdline():
                 self.listnodes(argv[1])
 
             elif argv[1]=='-rt' or argv[1]== 'revoketicket':
-                self.revokeTicket(argv[1])
+                self.revokeTicket(argv[1],argv[2])
 
             elif argv[1]=='-s' or argv[1]== 'start':
                 self.start(argv[1])
@@ -82,9 +82,10 @@ class Cmdline():
         print "Selected option = ", arg       
         # create JSON message and send to server
 
-    def revokeTicket(self,arg):
+    def revokeTicket(self,arg,url):
         print "Selected option = ", arg       
         # create JSON message and send to server
+        TicketsAPI(LOCAL_SERVER).revoke(url)
 
     def shutdown(self,arg):
         print "Selected option = ", arg      
@@ -92,7 +93,7 @@ class Cmdline():
 	shut = NodesAPI(LOCAL_SERVER)
         #url = Node()
         shut.unregister()
-        #raise KeyboardInterrupt
+  #      raise KeyboardInterrupt
 
 def main():
     cmd = Cmdline()

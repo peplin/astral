@@ -10,7 +10,8 @@ from handlers.tickets import TicketsHandler
 
 url_patterns = [
     (r"/nodes", NodesHandler),
-    (r"/node/(\d+)", NodeHandler),
+    (r"/(node)/(\d+)", NodeHandler),
+    (r"/node", NodeHandler),
     (r"/streams", StreamsHandler),
     (r"/tickets", TicketsHandler),
     (r"/stream/(\d+)", StreamHandler),
