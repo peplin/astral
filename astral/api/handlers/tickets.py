@@ -2,8 +2,8 @@ from tornado.web import HTTPError
 
 from astral.conf import settings
 from astral.api.handlers.base import BaseHandler
-from astral.api.client import TicketsAPI
-from astral.models import Ticket, Node, Stream
+from astral.api.client import TicketsAPI, NodesAPI
+from astral.models import Ticket, Node, Stream, session
 from astral.exceptions import NetworkError
 
 import logging
@@ -20,7 +20,7 @@ class TicketsHandler(BaseHandler):
 
     def _request_stream_from_node(self, stream, node, destination=None):
         try:
-            created = TicketsAPI(node.uri()).create(stream.tickets_url(),
+            ticket_data = TicketsAPI(node.uri()).create(stream.tickets_url(),
                     destination_uuid=Node.me().uuid)
         except NetworkError, e:
             log.info("Couldn't connect to %s to ask for %s -- deleting "
@@ -28,40 +28,46 @@ class TicketsHandler(BaseHandler):
             log.debug("Node returned: %s", e)
             node.delete()
         else:
-            if created:
-                # TODO actually, the source returned might be different
-                return Ticket(stream=stream, source=node)
+            if ticket_data:
+                source = Node.get_by(uuid=ticket_data['source'])
+                if not source:
+                    source_node_data = NodesAPI(node.uri()).get(
+                            Node.absolute_url(source))
+                    source = Node.from_dict(source_node_data)
+                return Ticket(stream=stream, source=source)
 
     def _request_stream_from_watchers(self, stream, destination):
+        tickets = []
         for ticket in Ticket.query.filter_by(stream=stream):
             if self._already_seeding(ticket):
-                return ticket
+                return [ticket]
             else:
-                new_ticket = self._request_stream_from_node(stream,
-                        ticket.destination)
-                if new_ticket:
-                    return new_ticket
+                tickets.append(self._request_stream_from_node(stream,
+                        ticket.destination))
+        return filter(None, tickets)
 
     def _request_stream_from_supernodes(self, stream, destination):
+        tickets = []
         for supernode in Node.supernodes():
-            new_ticket = self._request_stream_from_node(stream, supernode)
-            if new_ticket:
-                return new_ticket
+            tickets.append(self._request_stream_from_node(stream, supernode))
+        return filter(None, tickets)
 
     def _request_stream_from_source(self, stream, destination):
-        return self._request_stream_from_node(stream, stream.source)
+        return [self._request_stream_from_node(stream, stream.source)]
 
     def _request_stream(self, stream, destination):
+        unconfirmed_tickets = []
         for possible_source_method in [self._request_stream_from_watchers,
                 self._request_stream_from_supernodes,
                 self._request_stream_from_source]:
-            new_ticket = possible_source_method(stream, destination)
-            if new_ticket:
-                return new_ticket
+            unconfirmed_tickets.extend(possible_source_method(stream,
+                destination))
+        return filter(None, unconfirmed_tickets)
 
     def post(self, stream_id):
         """Return whether or not this node can forward the stream requested to
         the requesting node, and start doing so if it can."""
+        # TODO break this method up, it's gotten quite big and complicated
         stream = Stream.get_by(id=stream_id)
         destination_uuid = self.get_json_argument('destination_uuid', '')
         if destination_uuid:
@@ -85,9 +91,19 @@ class TicketsHandler(BaseHandler):
             # work for another client, since they could do it themselves. the
             # point is to contact nodes we know of but they don't. perhaps
             # instead we return a list of nodes so they can do it themselves?
-            new_ticket = self._request_stream(stream, destination)
-            if not new_ticket:
+            unconfirmed_tickets = self._request_stream(stream, destination)
+            if not unconfirmed_tickets:
                 raise HTTPError(412)
+            for ticket in unconfirmed_tickets:
+                ticket.source.update_rtt()
+
+            closest = min(unconfirmed_tickets, key=lambda t: t.source.rtt)
+            TicketsAPI(closest.source.uri()).confirm(closest.absolute_url())
+            session.commit()
+            for ticket in set(unconfirmed_tickets) - set([closest]):
+                TicketsAPI(ticket.source.uri()).cancel(ticket.absolute_url())
+                ticket.delete()
+
         new_ticket = Ticket(stream=stream, destination=destination)
         self.redirect(new_ticket.absolute_url())
 

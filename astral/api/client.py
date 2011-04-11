@@ -90,7 +90,8 @@ class TicketsAPI(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
         response = self.post(tickets_url, payload=json.dumps(
             {'destination_uuid': destination_uuid}))
-        return response.status == 200
+        if response.status == 200:
+            return response.body['ticket']
 
     def list(self):
         return self.get('/tickets').body['tickets']

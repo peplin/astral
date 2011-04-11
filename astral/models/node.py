@@ -45,8 +45,14 @@ class Node(BaseEntityMixin, Entity):
         return node
 
     def update_rtt(self):
-        sampled_rtt = NodeAPI(self.uri()).ping()
-        self.rtt = self._weighted_average(self.rtt, self.RTT_STEP, sampled_rtt)
+        try:
+            sampled_rtt = NodeAPI(self.uri()).ping()
+        except NetworkError:
+            log.warning("Unable to connect to %s for updating RTT -- "
+                    "leaving it at %s", self, self.rtt)
+        else:
+            self.rtt = self._weighted_average(self.rtt, self.RTT_STEP,
+                    sampled_rtt)
         return self.rtt
 
     def update_downstream(self):
