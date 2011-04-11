@@ -7,9 +7,14 @@ import string
 from astral.conf import settings
 from astral.exceptions import NetworkError
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class NodeAPI(restkit.Resource):
     def __init__(self, uri, **kwargs):
+        kwargs.setdefault('timeout', 3)
+        kwargs.setdefault('max_tries', 1)
         super(NodeAPI, self).__init__(uri, **kwargs)
 
     def make_headers(self, headers):
@@ -19,14 +24,15 @@ class NodeAPI(restkit.Resource):
     def request(self, *args, **kwargs):
         try:
             response = super(NodeAPI, self).request(*args, **kwargs)
-        except restkit.RequestError, e:
+        except (restkit.RequestError, ValueError), e:
             raise NetworkError(e)
         else:
             body = response.body_string()
             if body and response.headers.get('Content-Type'
                     ) == "application/json":
                 return json.loads(body)
-            return body
+            response.body = body
+            return response
 
     def ping(self):
         timer = timeit.Timer("NodeAPI('%s').get('/ping')" % self.uri,
@@ -35,7 +41,7 @@ class NodeAPI(restkit.Resource):
 
     def downstream_check(self, byte_count=None):
         byte_count = byte_count or settings.DOWNSTREAM_CHECK_LIMIT
-        timer = timeit.Timer("NodeAPI('%s').get('/ping', {'bytes': %s})"
+        timer = timeit.Timer("NodeAPI('%s').get('/ping', bytes=%s)"
                 % (self.uri, byte_count),
                 "from astral.api.client import NodeAPI")
         return byte_count, timer.timeit(1)
@@ -52,36 +58,67 @@ class NodeAPI(restkit.Resource):
 
 
 class NodesAPI(NodeAPI):
-    def list(self, query=None):
-        return super(NodesAPI, self).get('/nodes', query)['nodes']
+    def list(self):
+        response = self.get('/nodes')
+        if response:
+            return response['nodes']
+        else:
+            return []
 
     def register(self, payload=None):
-        return super(NodesAPI, self).post('/nodes', payload=json.dumps(payload))
+        return self.post('/nodes', payload=json.dumps(payload))
 
     def unregister(self, node_url=None):
         if node_url == None:
            node_url = '/node'
-        return super(NodesAPI, self).delete(node_url)
+        try:
+            return self.delete(node_url)
+        except NetworkError, e:
+            log.warning("Can't connect to server: %s", e)
 
 
 class StreamsAPI(NodeAPI):
-    def list(self, query=None):
-         return super(StreamsAPI, self).get('/streams', query)['streams']
+    def list(self):
+        return self.get('/streams').body['streams']
+
+    def create(self, **kwargs):
+        response = self.post('/streams', payload=json.dumps(kwargs))
+        return response.status == 200
 
 
 class TicketsAPI(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
-        response = super(TicketsAPI, self).post(tickets_url, payload=json.dumps(
+        response = self.post(tickets_url, payload=json.dumps(
             {'destination_uuid': destination_uuid}))
-        return response.status == 200
+        if response.status == 200:
+            return response.body['ticket']
 
-    def list(self, query=None):
-        return super(TicketsAPI, self).get('/tickets', query) ['tickets']
-               
+    def list(self):
+        return self.get('/tickets').body['tickets']
+
+    def cancel(self, ticket_url):
+        try:
+            return self.delete(ticket_url)
+        except NetworkError, e:
+            log.warning("Can't connect to server: %s", e)
+
+    def confirm(self, ticket_url):
+        try:
+            response = self.put(ticket_url, payload=json.dumps(
+                {'confirmed': True}))
+        except NetworkError:
+            return False
+        else:
+            return response.status == 200
 
     def revoke(self, tickets_url, destination_uuid=None):
         response = super(TicketsAPI, self).delete(tickets_url, payload=json.dumps(
             {'destination_uuid': destination_uuid}))
         return response.status == 200
         
+class RemoteIP(NodeAPI):
+    def __init__(self):
+        super(RemoteIP, self).__init__('http://jsonip.appspot.com')
 
+    def get(self):
+        return super(RemoteIP, self).get()['ip']

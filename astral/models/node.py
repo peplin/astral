@@ -3,14 +3,12 @@ from elixir import (Field, Unicode, Integer, Entity, Boolean,
 from elixir.events import after_insert
 from sqlalchemy import UniqueConstraint
 import uuid
-import socket
-from urlparse import urlparse
 import json
 
 from astral.exceptions import NetworkError
 from astral.models.base import BaseEntityMixin
 from astral.models.event import Event
-from astral.api.client import NodeAPI
+from astral.api.client import NodeAPI, RemoteIP
 from astral.conf import settings
 
 import logging
@@ -24,8 +22,8 @@ class Node(BaseEntityMixin, Entity):
     supernode = Field(Boolean, default=False)
     primary_supernode = ManyToOne('Node')
     rtt = Field(Integer)
-    upstream = Field(Integer)
-    downstream = Field(Integer)
+    upstream = Field(Integer) # KB/s
+    downstream = Field(Integer) # KB/s
 
     using_table_options(UniqueConstraint('ip_address', 'port'))
 
@@ -47,20 +45,26 @@ class Node(BaseEntityMixin, Entity):
         return node
 
     def update_rtt(self):
-        sampled_rtt = NodeAPI(self.uri()).ping()
-        self.rtt = self._weighted_average(self.rtt, self.RTT_STEP, sampled_rtt)
+        try:
+            sampled_rtt = NodeAPI(self.uri()).ping()
+        except NetworkError:
+            log.warning("Unable to connect to %s for updating RTT -- "
+                    "leaving it at %s", self, self.rtt)
+        else:
+            self.rtt = self._weighted_average(self.rtt, self.RTT_STEP,
+                    sampled_rtt)
         return self.rtt
 
     def update_downstream(self):
         byte_count, transfer_time = NodeAPI(self.uri()).downstream_check()
         self.downstream = self._weighted_average(self.downstream,
-                self.BANDWIDTH_STEP, byte_count / transfer_time)
+                self.BANDWIDTH_STEP, byte_count / transfer_time / 1000.0)
         return self.downstream
 
-    def update_upstream(self):
-        byte_count, transfer_time = NodeAPI(self.uri()).upstream_check()
+    def update_upstream(self, url=None):
+        byte_count, transfer_time = NodeAPI(url or self.uri()).upstream_check()
         self.upstream = self._weighted_average(self.upstream,
-                self.BANDWIDTH_STEP, byte_count / transfer_time)
+                self.BANDWIDTH_STEP, byte_count / transfer_time / 1000.0)
         return self.upstream
 
     def _weighted_average(self, estimated, step, sample):
@@ -89,37 +93,36 @@ class Node(BaseEntityMixin, Entity):
 
     @classmethod
     def me(cls, uuid_override=None):
-        node = Node.get_by(uuid=uuid_override or uuid.getnode())
+        desired_uuid = uuid_override or unicode(uuid.getnode())
+        node = Node.get_by(uuid=desired_uuid)
         if not node:
             node = Node()
-            node.uuid = uuid_override or uuid.getnode()
+            node.uuid = desired_uuid
             log.info("Using %s for this node's unique ID", node.uuid)
 
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                parsed_url = urlparse(settings.ASTRAL_WEBSERVER)
-                s.connect((parsed_url.hostname, parsed_url.port))
-            except socket.gaierror, e:
-                log.debug("Couldn't connect to the Astral webserver: %s", e)
+                node.ip_address = RemoteIP().get()
+            except NetworkError, e:
+                log.debug("Couldn't connect to the web: %s", e)
                 node.ip_address = '127.0.0.1'
-            else:
-                node.ip_address = s.getsockname()[0]
             log.info("Using %s for this node's IP address", node.ip_address)
 
             node.port = settings.PORT
             log.info("Using %s for this node's API port", node.port)
         return node
 
+    @classmethod
+    def not_me(cls):
+        return cls.query.filter(Node.uuid != Node.me().uuid).all()
+
     def uri(self):
         return "http://%s:%s" % (self.ip_address, self.port)
 
-    def absolute_url(cls, uuid_override=None):
+    def absolute_url(cls, uuid_override=''):
         """This class does a bit of double duty, as both a class and instance
         method. It's probably not great practice, but we'll try it out. The
         point is to have the URL pattern only be in one place.
         """
-        if uuid_override== '':
-            uuid_override = Node.me()
         if isinstance(cls, Node):
             uuid_override = uuid_override or cls.uuid
         return '/node/%s' % uuid_override

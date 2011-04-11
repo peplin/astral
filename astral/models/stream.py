@@ -19,6 +19,14 @@ class Stream(BaseEntityMixin, Entity):
     def to_dict(self):
         return {'source': self.source.uuid, 'name': self.name, 'id': self.id}
 
+    @classmethod
+    def from_dict(cls, data):
+        stream = Stream.get_by(name=data['name'])
+        if not stream:
+            stream = cls(source=data['source'], name=data['name'],
+                    description=data.get('description', ''))
+        return stream
+
     @after_insert
     def emit_new_stream_event(self):
         Event(message=json.dumps({'type': "stream", 'data': self.to_dict()}))

@@ -21,7 +21,8 @@ class StreamFactory(factory.Factory):
 
 class NodeFactory(factory.Factory):
     ip_address = factory.LazyAttribute(lambda a: faker.internet.ip_address())
-    uuid = factory.LazyAttribute(lambda a: random.randrange(1000, 1000000))
+    uuid = factory.LazyAttribute(
+            lambda a: unicode(random.randrange(1000, 1000000)))
     port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
 
 class SupernodeFactory(factory.Factory):
@@ -31,15 +32,6 @@ class SupernodeFactory(factory.Factory):
     uuid = factory.LazyAttribute(lambda a: random.randrange(1000, 1000000))
     port = factory.LazyAttribute(lambda a: random.randrange(1000, 10000))
     supernode = True
-
-
-class ThisNodeFactory(factory.Factory):
-    FACTORY_FOR = Node
-
-    ip_address = '127.0.0.1'
-    uuid = factory.LazyAttribute(lambda a: uuid.getnode())
-    port = factory.LazyAttribute(lambda a: settings.PORT)
-
 
 class TicketFactory(factory.Factory):
     source = factory.LazyAttribute(lambda a: NodeFactory())

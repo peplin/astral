@@ -18,5 +18,5 @@ class BaseTest(tornado.testing.AsyncHTTPTestCase):
 
     def tearDown(self):
         super(BaseTest, self).tearDown()
-        session.commit()
+        session.rollback()
         drop_all()

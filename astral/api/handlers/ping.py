@@ -18,7 +18,7 @@ class PingHandler(BaseHandler):
                     byte_count)
             with open('/dev/urandom') as random_file:
                 self.write(random_file.read(
-                    max(byte_count, settings.DOWNSTREAM_CHECK_LIMIT)))
+                    min(byte_count, settings.DOWNSTREAM_CHECK_LIMIT)))
         else:
             self.write("Pong!")
             log.debug("Responded to a ping")

@@ -4,16 +4,18 @@ import json
 import mockito
 
 from astral.api.tests import BaseTest
-from astral.api.client import TicketsAPI
+from astral.api.client import TicketsAPI, NodeAPI
 from astral.models import Ticket, Node, session, Stream
 from astral.models.tests.factories import (StreamFactory, NodeFactory,
-        ThisNodeFactory, TicketFactory)
+        TicketFactory)
 
 class TicketsHandlerTest(BaseTest):
     def setUp(self):
         super(TicketsHandlerTest, self).setUp()
-        ThisNodeFactory()
         session.commit()
+        mockito.when(NodeAPI).ping().thenReturn(42)
+        mockito.when(TicketsAPI).confirm(mockito.any()).thenReturn(True)
+        mockito.when(TicketsAPI).cancel(mockito.any()).thenReturn(True)
 
     def test_create(self):
         stream = StreamFactory(source=Node.me())
@@ -86,10 +88,11 @@ class TicketsHandlerTest(BaseTest):
         eq_(Ticket.query.count(), tickets_before + 1)
 
     def test_other_known_tickets(self):
-        mockito.when(TicketsAPI).create(mockito.any(),
-                destination_uuid=mockito.any()).thenReturn(True)
         stream = StreamFactory()
         existing_ticket = TicketFactory(stream=stream)
+        mockito.when(TicketsAPI).create(mockito.any(),
+                destination_uuid=mockito.any()).thenReturn(
+                        {'source': existing_ticket.destination.uuid})
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(
             self.get_url(stream.tickets_url()), 'POST', body=''),
@@ -101,8 +104,10 @@ class TicketsHandlerTest(BaseTest):
         eq_(ticket.source, existing_ticket.destination)
 
     def test_remote_source(self):
+        remote_node = NodeFactory()
         mockito.when(TicketsAPI).create(mockito.any(),
-                destination_uuid=mockito.any()).thenReturn(True)
+                destination_uuid=mockito.any()).thenReturn(
+                        {'source': remote_node.uuid})
         stream = StreamFactory()
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(self.get_url(stream.tickets_url()),
@@ -113,7 +118,7 @@ class TicketsHandlerTest(BaseTest):
 
     def test_none_available(self):
         mockito.when(TicketsAPI).create(mockito.any(),
-                destination_uuid=mockito.any()).thenReturn(False)
+                destination_uuid=mockito.any()).thenReturn(None)
         stream = StreamFactory()
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(self.get_url(stream.tickets_url()),
@@ -124,8 +129,10 @@ class TicketsHandlerTest(BaseTest):
 
     def test_fallback_to_another_remote_node(self):
         # TODO node should be able to return a different source than itself
+        remote_node = NodeFactory()
         mockito.when(TicketsAPI).create(mockito.any(),
-                destination_uuid=mockito.any()).thenReturn(True)
+                destination_uuid=mockito.any()).thenReturn(
+                        {'source': remote_node.uuid})
         stream = StreamFactory()
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(self.get_url(stream.tickets_url()),

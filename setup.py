@@ -28,6 +28,8 @@ setup(name='astral',
       packages=find_packages(),
       entry_points={
           'console_scripts': [
-              'astralnode = astral.bin.astralnode:main',],
+              'astralnode = astral.bin.astralnode:main',
+              'astralctl = astral.bin.astralctl:main',
+          ],
       },
 )

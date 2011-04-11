@@ -1,13 +1,13 @@
 from nose.tools import eq_
 from tornado.httpclient import HTTPRequest
-import uuid
 
 from astral.api.tests import BaseTest
-from astral.models.node import Node
+from astral.models import Node
+from astral.models.tests.factories import NodeFactory
 
 class NodeHandlerTest(BaseTest):
     def test_delete_node(self):
-        node = Node(uuid=uuid.getnode())
+        node = NodeFactory()
         self.http_client.fetch(HTTPRequest(
             self.get_url(node.absolute_url()), 'DELETE'), self.stop)
         response = self.wait()

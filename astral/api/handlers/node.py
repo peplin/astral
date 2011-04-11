@@ -13,6 +13,7 @@ class NodeHandler(BaseHandler):
         """Remove the requesting node from the list of known nodes,
         unregistering the from the network.
         """
+
         print "***Entered Handler"
         if node_uuid:
             node = Node.get_by(uuid=node_uuid)
@@ -24,11 +25,20 @@ class NodeHandler(BaseHandler):
         node.delete()
 
         print "after deletion", node , temp, Node.me()
+
+        if node_uuid:
+            node = Node.get_by(uuid=node_uuid)
+        else:
+            node = Node.me()
+        node.delete()
+
+
         closest_supernode = Node.closest_supernode()
         if closest_supernode:
             log.info("Notifying closest supernode %s that %s was deleted",
                     closest_supernode, node)
             NodesAPI(closest_supernode.absolute_url()).unregister(node)
+
         print "before last if********", node , temp, Node.me()
         sys.exit()
 
@@ -41,3 +51,8 @@ class NodeHandler(BaseHandler):
             shut.stop()
             raise KeyboardInterrupt"""
 
+
+        if node == Node.me():
+            # TODO kind of a shortcut to shutting down, but should be a bit more
+            # formal
+            raise KeyboardInterrupt
