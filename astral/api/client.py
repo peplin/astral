@@ -79,5 +79,9 @@ class TicketsAPI(NodeAPI):
         return super(TicketsAPI, self).get('/tickets', query) ['tickets']
                
 
+    def revoke(self, tickets_url, destination_uuid=None):
+        response = super(TicketsAPI, self).delete(tickets_url, payload=json.dumps(
+            {'destination_uuid': destination_uuid}))
+        return response.status == 200
         
 
