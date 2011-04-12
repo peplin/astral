@@ -30,7 +30,7 @@ class NodeAPI(restkit.Resource):
             body = response.body_string()
             if body and response.headers.get('Content-Type'
                     ) == "application/json":
-                return json.loads(body)
+                body= json.loads(body)
             response.body = body
             return response
 
@@ -79,7 +79,10 @@ class NodesAPI(NodeAPI):
 
 class StreamsAPI(NodeAPI):
     def list(self):
+        print "foo"
+        print self.get('/streams')
         return self.get('/streams').body['streams']
+  
 
     def create(self, **kwargs):
         response = self.post('/streams', payload=json.dumps(kwargs))
@@ -111,10 +114,6 @@ class TicketsAPI(NodeAPI):
         else:
             return response.status == 200
 
-    def revoke(self, tickets_url, destination_uuid=None):
-        response = super(TicketsAPI, self).delete(tickets_url, payload=json.dumps(
-            {'destination_uuid': destination_uuid}))
-        return response.status == 200
         
 class RemoteIP(NodeAPI):
     def __init__(self):
