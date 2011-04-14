@@ -51,7 +51,7 @@ class Cmdline():
                 self.enableSeeding(argv[1])
 
             elif argv[1]=='-cn' or argv[1]== 'createnode':
-                self.createNode(argv[1])
+                self.createNode(argv[1],argv[2])
 
             elif argv[1]=='-s' or argv[1]== 'start':
                 self.start(argv[1])
@@ -59,7 +59,7 @@ class Cmdline():
            
         
     def usage(self):
-        print "Usage: python   cmdline_controller.py    start/stream/watch uri /shutdown/liststreams/listtickets/listnodes/revoketicket ticketIdentification/streamurl xxx/seed/createnode or -s/- st/-w uri /-sh/-ls/-lt/-ln/-rt identification/-su xxx/-se/-cn"
+        print "Usage: python   cmdline_controller.py    start/stream/watch url/shutdown/liststreams/listtickets/listnodes/revoketicket ticketIdentification/streamurl xxx/seed/createnode uuid or -s/- st/-w url /-sh/-ls/-lt/-ln/-rt identification/-su xxx/-se/-cn"
 
     def liststreams(self,arg):
         print "Selected option = ", arg
@@ -90,9 +90,10 @@ class Cmdline():
                     description=description)
         print "created stream, name = ", name, "description = ", description
 
-    def watch(self,arg,uri):
+    def watch(self,arg,url):
         print "Selected option = ", arg       
         # create JSON message and send to server
+        TicketsAPI(LOCAL_SERVER).create(url)
 
     def getStreamUrl(self,arg):
         print "Selected option = ", arg       
@@ -102,9 +103,10 @@ class Cmdline():
         print "Selected option = ", arg       
         # create JSON message and send to server
 
-   def createNode(self,arg):
+    def createNode(self,arg,uuid):
         print "Selected option = ", arg       
         # create JSON message and send to server
+        NodesAPI(LOCAL_SERVER).register(uuid)
 
     def revokeTicket(self,arg,url):
         print "Selected option = ", arg       
