@@ -30,7 +30,7 @@ class NodeAPI(restkit.Resource):
             body = response.body_string()
             if body and response.headers.get('Content-Type'
                     ) == "application/json":
-                body= json.loads(body)
+                body = json.loads(body)
             response.body = body
             return response
 
@@ -61,7 +61,7 @@ class NodesAPI(NodeAPI):
     def list(self):
         response = self.get('/nodes')
         if response:
-            return response['nodes']
+            return response.body['nodes']
         else:
             return []
 
@@ -118,4 +118,4 @@ class RemoteIP(NodeAPI):
         super(RemoteIP, self).__init__('http://jsonip.appspot.com')
 
     def get(self):
-        return super(RemoteIP, self).get()['ip']
+        return super(RemoteIP, self).get().body['ip']
