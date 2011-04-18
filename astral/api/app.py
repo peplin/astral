@@ -21,8 +21,7 @@ def run():
     event_thread.start()
 
     app = NodeWebAPI()
-    http_server = tornado.httpserver.HTTPServer(app)
-    http_server.listen(settings.TORNADO_SETTINGS['port'])
+    app.listen(settings.TORNADO_SETTINGS['port'])
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == "__main__":
