@@ -79,10 +79,8 @@ class NodesAPI(NodeAPI):
 
 class StreamsAPI(NodeAPI):
     def list(self):
-        print "foo"
-        print self.get('/streams')
         return self.get('/streams').body['streams']
-  
+
 
     def create(self, **kwargs):
         response = self.post('/streams', payload=json.dumps(kwargs))
@@ -114,7 +112,7 @@ class TicketsAPI(NodeAPI):
         else:
             return response.status == 200
 
-        
+
 class RemoteIP(NodeAPI):
     def __init__(self):
         super(RemoteIP, self).__init__('http://jsonip.appspot.com')
