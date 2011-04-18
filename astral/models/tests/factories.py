@@ -4,6 +4,7 @@ import random
 import uuid
 
 from astral.conf import settings
+from astral.models.base import slugify
 from astral.models.stream import Stream
 from astral.models.node import Node
 from astral.models.ticket import Ticket
@@ -14,8 +15,11 @@ factory.Factory.set_creation_function(ELIXIR_CREATION)
 
 
 class StreamFactory(factory.Factory):
-    id = factory.Sequence(lambda n: int(n) + 1)
     name = factory.LazyAttribute(lambda a: ' '.join(faker.lorem.words()))
+    # TODO this does happen automatically, but we're not committing after every
+    # factory object is created because of all of the sqlalchemy errors we get.
+    # one day, we'll figure that shit out.
+    slug = factory.LazyAttribute(lambda a: slugify(a.name))
     source = factory.LazyAttribute(lambda a: NodeFactory())
 
 

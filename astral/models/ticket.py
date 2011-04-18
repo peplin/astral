@@ -23,13 +23,13 @@ class Ticket(Entity, BaseEntityMixin):
                 destination=destination, *args, **kwargs)
 
     def absolute_url(self):
-        return '/stream/%s/ticket/%s' % (self.stream.id,
+        return '/stream/%s/ticket/%s' % (self.stream.slug,
                 self.destination.uuid)
 
     def to_dict(self):
         return {'source': self.source.uuid,
                 'destination': self.destination.uuid,
-                'stream': self.stream_id}
+                'stream': self.stream.slug}
 
     @classmethod
     def unconfirmed(cls, query=None):

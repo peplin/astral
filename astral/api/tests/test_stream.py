@@ -12,5 +12,5 @@ class StreamHandlerTest(BaseTest):
         eq_(response.code, 200)
         result = json.loads(response.body)
         ok_('stream' in result)
-        eq_(result['stream']['id'], stream.id)
+        eq_(result['stream']['slug'], stream.slug)
         eq_(result['stream']['name'], stream.name)

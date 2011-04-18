@@ -6,6 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 class StreamHandler(BaseHandler):
-    def get(self, stream_id):
+    def get(self, stream_slug):
         """Return metadata for the stream."""
-        self.write({'stream': Stream.get_by(id=stream_id).to_dict()})
+        self.write({'stream': Stream.get_by(slug=stream_slug).to_dict()})

@@ -64,11 +64,11 @@ class TicketsHandler(BaseHandler):
                 destination))
         return filter(None, unconfirmed_tickets)
 
-    def post(self, stream_id):
+    def post(self, stream_slug):
         """Return whether or not this node can forward the stream requested to
         the requesting node, and start doing so if it can."""
         # TODO break this method up, it's gotten quite big and complicated
-        stream = Stream.get_by(id=stream_id)
+        stream = Stream.get_by(slug=stream_slug)
         destination_uuid = self.get_json_argument('destination_uuid', '')
         if destination_uuid:
             destination = Node.get_by(uuid=destination_uuid)

@@ -27,7 +27,7 @@ class TicketsHandlerTest(BaseTest):
         eq_(response.code, 200)
         result = json.loads(response.body)
         ok_('ticket' in result)
-        eq_(result['ticket']['stream'], stream.id)
+        eq_(result['ticket']['stream'], stream.slug)
         eq_(result['ticket']['source'], Node.me().uuid)
         ticket = Ticket.query.first()
         eq_(ticket.stream, stream)
@@ -50,7 +50,7 @@ class TicketsHandlerTest(BaseTest):
         eq_(response.code, 200)
         result = json.loads(response.body)
         ok_('ticket' in result)
-        eq_(result['ticket']['stream'], stream.id)
+        eq_(result['ticket']['stream'], stream.slug)
         eq_(result['ticket']['source'], Node.me().uuid)
         ticket = Ticket.query.first()
         eq_(ticket.stream, stream)
@@ -155,6 +155,6 @@ class TicketsListHandlerTest(BaseTest):
         for ticket in result['tickets']:
             source = Node.get_by(uuid=ticket['source'])
             destination = Node.get_by(uuid=ticket['destination'])
-            ok_(Ticket.get_by(stream=Stream.get_by(id=ticket['stream']),
+            ok_(Ticket.get_by(stream=Stream.get_by(slug=ticket['stream']),
                 source=source, destination=destination))
 

@@ -15,7 +15,7 @@ class TicketHandlerTest(BaseTest):
         response = self.wait()
         eq_(response.code, 200)
         eq_(Ticket.get_by(id=ticket.id), None)
-        ok_(Stream.get_by(id=ticket.stream.id))
+        ok_(Stream.get_by(slug=ticket.stream.slug))
 
     def test_get(self):
         node = Node.me()
@@ -24,7 +24,7 @@ class TicketHandlerTest(BaseTest):
         eq_(response.code, 200)
         result = json.loads(response.body)
         ok_('ticket' in result)
-        eq_(result['ticket']['stream'], ticket.stream_id)
+        eq_(result['ticket']['stream'], ticket.stream.slug)
 
     def test_confirm(self):
         node = Node.me()
