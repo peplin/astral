@@ -1,8 +1,6 @@
 from astral.api.handlers.base import BaseHandler
 from astral.models.node import Node
 from astral.api.client import NodesAPI
-import sys
-
 
 import logging
 log = logging.getLogger(__name__)
@@ -14,36 +12,16 @@ class NodeHandler(BaseHandler):
         unregistering the from the network.
         """
 
-        if node_uuid:
-            node = Node.get_by(uuid=node_uuid)
-        else:
-            node = Node.me()
-            temp = node
-        node.delete()
+        if not node_uuid:
+            log.info("Shutting down because of request from %s",
+                    self.request.remote_ip)
+            self.stop()
+            return
 
-        if node_uuid:
-            node = Node.get_by(uuid=node_uuid)
-        else:
-            node = Node.me()
-        node.delete()
-
+        node = Node.get_by(uuid=node_uuid)
         closest_supernode = Node.closest_supernode()
         if closest_supernode:
             log.info("Notifying closest supernode %s that %s was deleted",
                     closest_supernode, node)
             NodesAPI(closest_supernode.absolute_url()).unregister(node)
-
-        sys.exit()
-
-        if temp == Node.me():
-            # TODO kind of a shortcut to shutting down, but should be a bit more
-            # formal
-            GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0) 
-            """shut = Daemon()
-            shut.stop()
-            raise KeyboardInterrupt"""
-
-        if node == Node.me():
-            # TODO kind of a shortcut to shutting down, but should be a bit more
-            # formal
-            raise KeyboardInterrupt
+        node.delete()
