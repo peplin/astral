@@ -1,3 +1,5 @@
+import tornado.ioloop
+
 from astral.api.handlers.base import BaseHandler
 from astral.models.node import Node
 from astral.api.client import NodesAPI
@@ -15,7 +17,7 @@ class NodeHandler(BaseHandler):
         if not node_uuid:
             log.info("Shutting down because of request from %s",
                     self.request.remote_ip)
-            self.stop()
+            tornado.ioloop.IOLoop.instance().stop()
             return
 
         node = Node.get_by(uuid=node_uuid)

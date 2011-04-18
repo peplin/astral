@@ -28,7 +28,7 @@ class LocalNode(object):
         DaemonThread().start()
         try:
             astral.api.app.run()
-        except: # tolerate the bare accept here to make sure we always shutdown
+        finally: # tolerate the bare accept here to make sure we always shutdown
             self.shutdown()
 
     def node(self):
