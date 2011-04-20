@@ -10,7 +10,7 @@ class AstralApp(rtmp.App):                                  # AstralApp extends 
 
 
 # rtmp://localhost:1935/astral receives and forwards streams
-rtmp._debug = True
+#rtmp._debug = True
 agent = rtmp.FlashServer()                                  # a new RTMP server instance
 agent.apps = dict({'astral': AstralApp})                    # rtmp://ADDR:PORT/astral will route to our AstralApp instance
 agent.start('0.0.0.0', 1935)                                # start the server on localhost port 1935

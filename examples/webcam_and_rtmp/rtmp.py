@@ -1054,6 +1054,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     
     _debug = options.verbose
+#    _debug = True
     try:
         agent = FlashServer()
         agent.root = options.root
