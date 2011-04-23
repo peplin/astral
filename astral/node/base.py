@@ -12,6 +12,7 @@ from astral.conf import settings
 from astral.api.client import NodesAPI, TicketsAPI
 from astral.node.bootstrap import BootstrapThread
 from astral.node.daemon import DaemonThread
+from astral.node.stream import StreamingThread
 
 import logging
 log = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ class LocalNode(object):
         BootstrapThread(node=self.node,
                 upstream_limit=self.upstream_limit).start()
         DaemonThread().start()
+        StreamingThread().start()
         try:
             astral.api.app.run()
         finally: # tolerate the bare accept here to make sure we always shutdown
