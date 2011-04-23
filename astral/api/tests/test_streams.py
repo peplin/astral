@@ -21,7 +21,8 @@ class StreamsHandlerTest(BaseTest):
         data = {'name': faker.lorem.sentence()}
         eq_(Stream.get_by(name=data['name']), None)
         self.http_client.fetch(HTTPRequest(
-            self.get_url('/streams'), 'POST', body=json.dumps(data)), self.stop)
+            self.get_url('/streams'), 'POST', body=json.dumps(data),
+                follow_redirects=False), self.stop)
         response = self.wait()
-        eq_(response.code, 200)
+        eq_(response.code, 302)
         ok_(Stream.get_by(name=data['name']))
