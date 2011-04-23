@@ -2,13 +2,10 @@ import sys
 from astral.api.client import StreamsAPI
 from astral.api.client import NodesAPI
 from astral.api.client import TicketsAPI
-import json
 from astral.api.client import NodeAPI
 from astral.conf import settings
-from astral.node.base import LocalNode
 from astral.bin.astralnode import NodeCommand
-from astral.api.handlers.node import NodeHandler
-from astral.models.node import Node
+import json
 
 LOCAL_SERVER = "http://localhost:8000"
 
@@ -22,44 +19,50 @@ class Cmdline():
             self.usage()
         
 	else:
-                       
-	    if argv[1]=='-st' or argv[1]== 'stream':
+              
+            if argv[1]=='-cn' or argv[1]== 'createfakenode':
+                self.createNode(argv[1],argv[2],argv[3])
+ 
+            elif argv[1]=='-ln' or argv[1]== 'listnodes':
+                self.listnodes(argv[1])
+
+            elif argv[1]=='-ls' or argv[1]== 'liststreams':
+                self.liststreams(argv[1])   
+
+            elif argv[1]=='-lt' or argv[1]== 'listtickets':
+                self.listtickets(argv[1])   
+
+            elif argv[1]=='-st' or argv[1]== 'stream':
                 self.stream(argv[1],argv[2],argv[3])
 
             elif argv[1]=='-w' or argv[1]== 'watch':
                 self.watch(argv[1],argv[2])
 
-            elif argv[1]=='-sh' or argv[1]== 'shutdown':
-                self.shutdown(argv[1])
+            elif argv[1]=='-se' or argv[1]== 'seed':
+                self.enableSeeding(argv[1],argv[2])
 
-            elif argv[1]=='-ls' or argv[1]== 'liststreams':
-                self.liststreams(argv[1])
-
-            elif argv[1]=='-lt' or argv[1]== 'listtickets':
-                self.listtickets(argv[1])
-
-            elif argv[1]=='-ln' or argv[1]== 'listnodes':
-                self.listnodes(argv[1])
+            elif argv[1]=='-su' or argv[1]== 'streamurl':
+                self.getStreamUrl(argv[1],argv[2])
 
             elif argv[1]=='-rt' or argv[1]== 'revoketicket':
                 self.revokeTicket(argv[1],argv[2])
 
-            elif argv[1]=='-su' or argv[1]== 'streamurl':
-                self.getStreamUrl(argv[1])
-
-            elif argv[1]=='-se' or argv[1]== 'seed':
-                self.enableSeeding(argv[1])
-
-            elif argv[1]=='-cn' or argv[1]== 'createnode':
-                self.createNode(argv[1],argv[2])
-
-            elif argv[1]=='-s' or argv[1]== 'start':
-                self.start(argv[1])
-
+            elif argv[1]=='-sh' or argv[1]== 'shutdown':
+                self.shutdown(argv[1])
            
         
     def usage(self):
-        print "Usage: python   cmdline_controller.py    start/stream/watch url/shutdown/liststreams/listtickets/listnodes/revoketicket ticketIdentification/streamurl xxx/seed/createnode uuid or -s/- st/-w url /-sh/-ls/-lt/-ln/-rt identification/-su xxx/-se/-cn"
+        print "\nUsage: python astral/bin/astractl.py option\nAvailable options:\n1.createfakenode xxx or -cn xxx\n2.listnodes or -ln\n3.liststreams -ls\n4.listtickets or -lt\n5.stream streamname/id description or -st streamname/id description\n6.watch streamname/id or -w streamname/id\n7.seed streamname/id or -se streamname/id\n8.streamurl streamname/id or -su streamname/id\n9.revoketicket ticketId or  -rt ticketId\n10.shutdown or -sh\n"
+
+    def createNode(self,arg,ip,portno):
+        print "Selected option = ", arg       
+        # create JSON message and send to server
+        NodesAPI(LOCAL_SERVER).register(ip)  
+
+    def listnodes(self,arg):
+        print "Selected option = ", arg
+        # create JSON message and send to server
+        print "List of nodes: ", NodesAPI(LOCAL_SERVER).list()  
 
     def liststreams(self,arg):
         print "Selected option = ", arg
@@ -72,17 +75,6 @@ class Cmdline():
         # create JSON message and send to server
         print "List of tickets: " , TicketsAPI(LOCAL_SERVER).list()
 
-    def listnodes(self,arg):
-        print "Selected option = ", arg
-        # create JSON message and send to server
-        print "List of nodes: ", NodesAPI(LOCAL_SERVER).list()
-
-    def start(self,arg):
-        print "Selected option = ", arg
-        # create JSON message and send to server
-        start = NodeCommand()
-        start.run()
-
     def stream(self,arg,name, description):
         print "Selected option = ", arg
         # create JSON message and send to server
@@ -90,23 +82,19 @@ class Cmdline():
                     description=description)
         print "created stream, name = ", name, "description = ", description
 
-    def watch(self,arg,url):
+    def watch(self,arg,streamId):
         print "Selected option = ", arg       
         # create JSON message and send to server
-        TicketsAPI(LOCAL_SERVER).create(url)
+        TicketsAPI(LOCAL_SERVER).create('/stream/'+streamId+'/tickets')
+        print "streaming ",streamId
 
-    def getStreamUrl(self,arg):
+    def enableSeeding(self,arg,streamId):
         print "Selected option = ", arg       
-        # create JSON message and send to server
+        # create JSON message and send to server    
 
-    def enableSeeding(self,arg):
+    def getStreamUrl(self,arg,streamId):
         print "Selected option = ", arg       
         # create JSON message and send to server
-
-    def createNode(self,arg,uuid):
-        print "Selected option = ", arg       
-        # create JSON message and send to server
-        NodesAPI(LOCAL_SERVER).register(uuid)
 
     def revokeTicket(self,arg,url):
         print "Selected option = ", arg       
@@ -117,9 +105,13 @@ class Cmdline():
         print "Selected option = ", arg      
         # create JSON message and send to server
 	shut = NodesAPI(LOCAL_SERVER)
-        #url = Node()
         shut.unregister()
-  #      raise KeyboardInterrupt
+
+    def start(self,arg):
+        print "Selected option = ", arg
+        # create JSON message and send to server
+        start = NodeCommand()
+        start.run()
 
 def main():
     cmd = Cmdline()
