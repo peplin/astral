@@ -74,7 +74,8 @@ class Node(BaseEntityMixin, Entity):
 
     @classmethod
     def update_supernode_rtt(cls):
-        for supernode in cls.query.filter_by(supernode=True):
+        for supernode in cls.query.filter_by(supernode=True).filter(
+                Node.uuid != Node.me().uuid):
             try:
                 supernode.update_rtt()
             except NetworkError:

@@ -77,18 +77,19 @@ class BootstrapThread(threading.Thread):
                             self.node().primary_supernode.uri())
         else:
             for supernode in Node.supernodes():
-                try:
-                    NodesAPI(supernode.uri()).register(
-                            self.node().to_dict())
-                except NetworkError, e:
-                    log.warning("Can't connect to supernode %s: %s",
-                            supernode, e)
-                    supernode.delete()
-                except RequestFailed:
-                    log.warning("%s threw an error - sure it's not "
-                            "running on another computer in your LAN with the "
-                            "same remote IP?", supernode)
-                    supernode.delete()
+                if supernode != Node.me():
+                    try:
+                        NodesAPI(supernode.uri()).register(
+                                self.node().to_dict())
+                    except NetworkError, e:
+                        log.warning("Can't connect to supernode %s: %s",
+                                supernode, e)
+                        supernode.delete()
+                    except RequestFailed:
+                        log.warning("%s threw an error - sure it's not "
+                                "running on another computer in your LAN with "
+                                "the same remote IP?", supernode)
+                        supernode.delete()
         session.commit()
 
     def run(self):
