@@ -22,7 +22,10 @@ def run():
 
     app = NodeWebAPI()
     app.listen(settings.TORNADO_SETTINGS['port'])
-    tornado.ioloop.IOLoop.instance().start()
+    try:
+        tornado.ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        pass
 
 if __name__ == "__main__":
     run()

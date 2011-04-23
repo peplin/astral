@@ -15,13 +15,17 @@ class StreamingThread(threading.Thread):
     def __init__(self):
         super(StreamingThread, self).__init__()
         self.daemon = True
+        self.agent = rtmp.FlashServer()
+        self.agent.apps = dict({settings.RTMP_APP_NAME: self.AstralApp})
 
     def run(self):
-        rtmp._debug = settings.DEBUG
-        agent = rtmp.FlashServer()
-        agent.apps = dict({settings.RTMP_APP_NAME: self.AstralApp})
-        agent.start('0.0.0.0', settings.RTMP_PORT)
+        log.info("Starting RTMP server on port %d", settings.RTMP_PORT)
+        self.agent.start('0.0.0.0', settings.RTMP_PORT)
         multitask.run()
+
+    def stop(self):
+        log.info("Stopping the RTMP server on port %d", settings.RTMP_PORT)
+        self.agent.stop()
 
     # TO DO: overwrite Protocol.parsemessage to intercept and forward data
     # packets between Astral nodes (start-up messages will need to be simulated)

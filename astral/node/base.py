@@ -27,7 +27,8 @@ class LocalNode(object):
         BootstrapThread(node=self.node,
                 upstream_limit=self.upstream_limit).start()
         DaemonThread().start()
-        StreamingThread().start()
+        self.streaming_thread = StreamingThread()
+        self.streaming_thread.start()
         try:
             astral.api.app.run()
         finally: # tolerate the bare accept here to make sure we always shutdown
@@ -69,3 +70,4 @@ class LocalNode(object):
         self._unregister_from_supernode()
         self._cancel_tickets()
         self._unregister_from_all()
+        self.streaming_thread.stop()
