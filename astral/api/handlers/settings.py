@@ -5,7 +5,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class PingHandler(BaseHandler):
+class SettingsHandler(BaseHandler):
     def get(self):
         """Return settings like port numbers and URL endpoints so other the
         browser and Flash player can determine these dynamically.

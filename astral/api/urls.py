@@ -6,6 +6,7 @@ from handlers.ping import PingHandler
 from handlers.events import EventHandler
 from handlers.ticket import TicketHandler
 from handlers.tickets import TicketsHandler
+from handlers.settings import SettingsHandler
 
 
 url_patterns = [
@@ -19,5 +20,6 @@ url_patterns = [
     (r"/stream/(.+)/ticket", TicketHandler),
     (r"/stream/(.+)", StreamHandler),
     (r"/ping", PingHandler),
+    (r"/settings", SettingsHandler),
     (r"/events", EventHandler),
 ]
