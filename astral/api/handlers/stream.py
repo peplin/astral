@@ -2,10 +2,19 @@ from astral.api.handlers.base import BaseHandler
 from astral.models import Stream
 
 import logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class StreamHandler(BaseHandler):
     def get(self, stream_slug):
         """Return metadata for the stream."""
         self.write({'stream': Stream.get_by(slug=stream_slug).to_dict()})
+
+    def put(self, stream_slug):
+        stream = Stream.get_by(slug=stream_slug)
+        if stream:
+            stream.streaming = self.get_json_argument('streaming')
+            if stream.streaming:
+                log.info("Resumed streaming %s", stream)
+            else:
+                log.info("Paused streaming %s", stream)

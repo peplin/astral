@@ -1,4 +1,4 @@
-from elixir import Field, Unicode, Entity, ManyToOne
+from elixir import Field, Unicode, Entity, ManyToOne, Boolean, Text
 from elixir.events import after_insert, before_insert
 import json
 
@@ -8,7 +8,9 @@ from astral.models.event import Event
 
 class Stream(BaseEntityMixin, Entity):
     name = Field(Unicode(48), primary_key=True)
+    description = Field(Text)
     slug = Field(Unicode(48))
+    streaming = Field(Boolean, default=False)
     source = ManyToOne('Node')
 
     def absolute_url(self):
@@ -19,7 +21,7 @@ class Stream(BaseEntityMixin, Entity):
 
     def to_dict(self):
         return {'source': self.source.uuid, 'name': self.name,
-                'slug': self.slug}
+                'slug': self.slug, 'description': self.description}
 
     @classmethod
     def from_dict(cls, data):
