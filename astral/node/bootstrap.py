@@ -1,4 +1,6 @@
 import threading
+from restkit import RequestFailed
+
 
 from astral.models import Node, session
 from astral.exceptions import NetworkError
@@ -81,6 +83,11 @@ class BootstrapThread(threading.Thread):
                 except NetworkError, e:
                     log.warning("Can't connect to supernode %s: %s",
                             supernode, e)
+                    supernode.delete()
+                except RequestFailed:
+                    log.warning("%s threw an error - sure it's not "
+                            "running on another computer in your LAN with the "
+                            "same remote IP?", supernode)
                     supernode.delete()
         session.commit()
 
