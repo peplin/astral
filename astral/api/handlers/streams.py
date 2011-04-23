@@ -16,13 +16,24 @@ class StreamsHandler(BaseHandler):
 
     def post(self):
         """Register a new available stream."""
-        self.get_json_argument('name')
+        # TODO kind of messy way to handle two different data types, but for
+        # some reason Torando is loading the name and description as lists
+        # instead of strings if they are form encded
+        if not hasattr(self.request, 'arguments') or not self.request.arguments:
+            self.load_json()
+        else:
+            self.request.arguments['name'] = self.request.arguments['name'][0]
+            self.request.arguments['description'] = (
+                    self.request.arguments['description'][0])
+
         self.request.arguments['source'] = Node.me()
         stream = Stream.from_dict(self.request.arguments)
         try:
             StreamsAPI(settings.ASTRAL_WEBSERVER).create(
                     source_uuid=stream.source.uuid, name=stream.name,
-                    description=stream.description)
+                    slug=stream.slug, description=stream.description)
         except NetworkError, e:
             log.warning("Unable to register stream with origin webserver: %s",
                     e)
+        self.redirect("%s/stream/%s"
+                % (settings.ASTRAL_WEBSERVER, stream.slug))
