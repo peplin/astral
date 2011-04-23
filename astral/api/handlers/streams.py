@@ -42,5 +42,5 @@ class StreamsHandler(BaseHandler):
             StreamsAPI(settings.ASTRAL_WEBSERVER).create(
                     source_uuid=stream.source.uuid, name=stream.name,
                     slug=stream.slug, description=stream.description)
-        self.redirect("%s/stream/%s"
+        self.redirect("%s/stream/%s/publish"
                 % (settings.ASTRAL_WEBSERVER, stream.slug))
