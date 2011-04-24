@@ -1,5 +1,4 @@
 import threading
-import time
 
 from astral.conf import settings
 from astral.rtmp import rtmp, multitask
