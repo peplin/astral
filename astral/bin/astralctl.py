@@ -39,7 +39,7 @@ class Cmdline():
                 self.watch(argv[1],argv[2])
 
             elif argv[1]=='-se' or argv[1]== 'seed':
-                self.enableSeeding(argv[1],argv[2])
+                self.enableSeeding(argv[1],argv[2],argv[3])
 
             elif argv[1]=='-su' or argv[1]== 'streamurl':
                 self.getStreamUrl(argv[1],argv[2])
@@ -52,7 +52,7 @@ class Cmdline():
            
         
     def usage(self):
-        print "\nUsage: python astral/bin/astractl.py option\nAvailable options:\n1.createfakenode xxx or -cn xxx\n2.listnodes or -ln\n3.liststreams -ls\n4.listtickets or -lt\n5.stream streamname/id description or -st streamname/id description\n6.watch streamname/id or -w streamname/id\n7.seed streamname/id or -se streamname/id\n8.streamurl streamname/id or -su streamname/id\n9.revoketicket streamname/id or  -rt streamname/id\n10.shutdown or -sh\n"
+        print "\nUsage: python astral/bin/astractl.py option\nAvailable options:\n1.createfakenode xxx or -cn xxx\n2.listnodes or -ln\n3.liststreams -ls\n4.listtickets or -lt\n5.stream streamname/id description or -st streamname/id description\n6.watch streamname/id or -w streamname/id\n7.seed streamname/id destuuid or -se streamname/id destuuid\n8.streamurl streamname/id or -su streamname/id\n9.revoketicket streamname/id or  -rt streamname/id\n10.shutdown or -sh\n"
 
     def createNode(self,arg,ip,portno):
         print "Selected option = ", arg       
@@ -88,9 +88,11 @@ class Cmdline():
         TicketsAPI(LOCAL_SERVER).create('/stream/'+streamId+'/tickets')
         print "streaming ",streamId
 
-    def enableSeeding(self,arg,streamId):
+    def enableSeeding(self,arg,streamId,destuuid):
         print "Selected option = ", arg       
-        # create JSON message and send to server    
+        # create JSON message and send to server 
+        TicketsAPI(LOCAL_SERVER).create('/stream/'+streamId+'/tickets',destuuid)
+        print "seeding ",streamId , "to", destuuid   
 
     def getStreamUrl(self,arg,streamId):
         print "Selected option = ", arg       
