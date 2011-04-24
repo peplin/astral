@@ -1,0 +1,379 @@
+/* 
+    Astral publish / consume streaming module
+    
+    interacts with the webpage JavaScript by means of the ExternalInterface
+    
+    publisher:
+    connects to the localhost RTMP server
+    registers new stream as uploader
+    displays a preview of the stream from the localhost HTTP tunnel
+    
+    consumer:
+    connects to the localhost HTTP tunnel (on the port that goes out to a remote RTMP server)
+    registers as stream consumer
+    displays stream
+*/
+
+import flash.external.*;
+import flash.net.FileReference;
+import flash.net.FileFilter;
+import flash.display.Sprite;
+import flash.events.MouseEvent;
+
+var video:Video;                            // Video object to play the stream back to the publisher
+var videoAspectRatio:Number = 0;            // remember the aspect ratio of the video source (used for resizing the video along with the stage)
+var cam:Camera;                             // camera source
+var mic:Microphone;                         // microphone source
+var file:FileReference;                     // file source
+var fileTypes:FileFilter;                   // file types, video
+var fileTypesArray:Array;                   // file types passed in array form
+var fileUploaderServiceURL:String;          // URL of the localhost uploader script (puts the file in the same directory as the swf, so that it can be accessed for streaming)
+var fileButton:Sprite;                      // "select file" button
+var nc:NetConnection;                       // connection to rtmplite (Flash Media Server clone for Python)
+var ns:NetStream;                           // published live stream (video + audio)
+var role:String;                            // role of the client flash
+var serverURL:String;                       // media server URL (for publisher)
+var tunnelURL:String;                       // HTTP tunnel URL (for consumer)
+var serverStreamName:String;                // published stream name
+var notice:TextField;                       // a text field to display notifications
+ 
+stage.scaleMode = StageScaleMode.NO_SCALE;  // do not automatically resize the display objects (each one will be handled individually)
+stage.align = StageAlign.TOP_LEFT;          // align the new stage to 0,0
+
+
+
+/*
+============
+Camera setup
+============
+*/
+
+// set up the webcam
+function setupCamera():void {
+    cam = Camera.getCamera();
+    // check if a camera is available
+    if (cam != null) 
+    {
+        video = new Video();                                        // camera ok, set up the local video playback
+        stage.addChild(video);
+        video.smoothing = true;
+        video.x = 0;
+        video.y = 0;
+        video.attachCamera(cam);                                    // mount the camera to the Video object
+        cam.addEventListener(StatusEvent.STATUS, onCamPermission);  // wait until user provides permission to access camera and microphone stream
+    }
+    else 
+    {
+        say("Trouble: could not find any camera");
+    }
+}
+
+// camera permission event
+function onCamPermission(event:StatusEvent):void 
+{
+    if (!cam.muted)
+    {
+        //Security.showSettings(SecurityPanel.CAMERA);  // display the camera selection panel
+
+        // adjust camera settings for better picture and connection
+        cam.setKeyFrameInterval(48);        // keyframe every X frames (min 1, max 48 - low for VoD, high for live)
+        cam.setMode(640, 480, 30, false);   // set cam quality (Flash will select the nearest one available), favoring fps over size (use 640x480, 30, false for best results; 320x240 will do as well)
+        cam.setQuality(76800, 0);           // (76800 = 600kbps) set a preference for stream bandwidth (any number in bytes) or quality (1-100 / more-less compression) - you should figure out the kbps you want to send, then /8*1024 to get the input value - 0 means automatically adjusted to match the other parameter
+
+        // try to get the default microphone
+        mic = Microphone.getMicrophone();
+        if (mic != null) 
+        {
+            mic.setUseEchoSuppression(false);   // the publisher will not receive any audio, so there's no risk of echo
+        }
+        else 
+        {
+            say("Trouble: could not find any microphone");  
+        }
+
+        // position video
+        videoAspectRatio = cam.width / cam.height;
+        resizeDisplay(new Event("RESIZE"));
+        
+        // init stream
+        setupStream();
+    }
+    else 
+    {
+        say("Trouble: the user denied access to the camera");
+    }
+    cam.removeEventListener(StatusEvent.STATUS, onCamPermission);
+}
+
+
+
+/*
+==========
+File setup
+==========
+*/
+
+// first upload the file to a directory that we can access (a subdirectory of the swf)
+function setupFile(serviceURL):void {
+    fileUploaderServiceURL = serviceURL;
+    fileTypes = new FileFilter("Movies (*.flv, *.mp4, *.m4v)", "*.flv; *.mp4; *.m4v");
+    fileTypesArray = new Array(fileTypes);
+    file = new FileReference();
+    file.addEventListener(Event.SELECT, fileSyncVariables);
+    //file.addEventListener(Event.COMPLETE, fileCompleteHandler);
+    file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, fileUploadCompleteDataHandler);
+    file.addEventListener(ProgressEvent.PROGRESS, fileProgressHandler);
+    
+    fileButton = new Sprite();
+    fileButton.addChild(new Bitmap(new ButtonSelectFile(83,25)));
+    fileButton.x = (stage.stageWidth - fileButton.width) / 2;
+    fileButton.y = (stage.stageHeight - fileButton.height) / 2 + 5;
+    fileButton.buttonMode = true;
+    stage.addChild(fileButton);
+    
+    fileButton.addEventListener(MouseEvent.CLICK, onFileButtonClick);
+}
+
+// click on fileButton
+function onFileButtonClick(e:MouseEvent):void {
+    file.browse(fileTypesArray);
+}
+
+// file selected from local filesystem
+function fileSyncVariables(event:Event):void {  
+    notice.text = "Loading ...";
+    notice.visible = true;
+    
+    fileButton.removeEventListener(MouseEvent.CLICK, onFileButtonClick);
+    stage.removeChild(fileButton);
+    
+    var fileUploadRequest:URLRequest = new URLRequest(fileUploaderServiceURL);
+    fileUploadRequest.method = URLRequestMethod.POST;
+    file.upload(fileUploadRequest, "file");
+}
+
+// upload complete, start streaming (event.data contains the relative file location)
+function fileUploadCompleteDataHandler(event:DataEvent):void {
+    notice.text = "";
+    notice.visible = false;
+    
+    // tell JS to instruct the note to stream the local file to the localhost RTMP server
+    ExternalInterface.call("startPublishingLocalFile", event.data);
+}
+
+// we might want to display the upload progress
+function fileProgressHandler(event:ProgressEvent):void {
+    //progressBar.width = Math.ceil(progress_bar_width*(event.bytesLoaded/event.bytesTotal));
+}
+
+
+/*
+============
+Stream setup
+============
+*/
+
+nc = new NetConnection();
+nc.addEventListener(NetStatusEvent.NET_STATUS, ncStatusHandler);
+nc.addEventListener(IOErrorEvent.IO_ERROR, ncErrorHandler);
+nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, ncErrorHandler);
+nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, ncErrorHandler);
+//nc.objectEncoding = flash.net.ObjectEncoding.AMF0;        // set object encoding for Flash Media Server <= v2
+//nc.client = {};
+    
+function setupStream():void {
+    // connect to localhost media server
+    nc.connect(serverURL);
+}
+
+function displayStream():void {
+    // connect to HTTP tunnel (leading to remote media server)
+    nc.connect(tunnelURL);
+}
+
+function closeStream():void
+{
+    if (ns != null) {
+        ns.close();
+        ns = null;
+    }
+}
+
+function ncStatusHandler(event:NetStatusEvent):void
+{
+    switch (event.info.code) {
+        case "NetConnection.Connect.Success":
+            //say("connection to media server succeeded");
+            
+            if (ns == null && nc != null && nc.connected) {
+                ns = new NetStream(nc);
+                ns.addEventListener(NetStatusEvent.NET_STATUS, nsStatusHandler);
+                ns.addEventListener(IOErrorEvent.IO_ERROR, nsErrorHandler);
+                ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, nsErrorHandler);
+                //ns.client = {};
+                
+                if (role == "publisher") {
+                    ns.attachCamera(cam);
+                    ns.attachAudio(mic);
+                    ns.publish(serverStreamName);
+                }
+                else {
+                    // position video
+                    video = new Video();
+                    video.smoothing = true;
+                    videoAspectRatio = 320 / 240;
+                    stage.addChild(video);
+                    video.x = 0;
+                    video.y = 0;
+                    resizeDisplay(new Event("RESIZE"));
+                    
+                    video.attachNetStream(ns);
+                    ns.play(serverStreamName);
+                }
+            }
+            
+            break;
+        case "NetConnection.Connect.Failed":
+            say("Trouble: connection to media server failed");
+            break;
+        case "NetConnection.Connect.Reject":
+            say("Trouble: connection to media server rejected");
+            break;
+        case "NetConnection.Connect.Closed":
+            nc = null;
+            closeStream();
+            break;
+        default:
+            say("ncStatusHandler: " + event.type + " " + event.info.code);
+            break;
+    }
+}
+
+function nsStatusHandler(event:NetStatusEvent):void {
+    switch (event.info.code) {
+        case "NetStream.Publish.Start":
+            //TODO: needs to be tested
+//          var metaData:Object = new Object();
+//          metaData.title = serverStreamName;
+//          metaData.width = cam.width;
+//          metaData.height = cam.height;
+//          ns.send("@setDataFrame", "onMetaData", metaData);
+            break;
+        case "NetStream.Play.Start":
+            break;
+        default:
+            say("nsStatusHandler: " + event.type + " " + event.info.code);
+            break;
+    }
+}
+        
+function ncErrorHandler(event:ErrorEvent):void {
+    say("Trouble: ncErrorHandler() " + event.type + " " + event.text);
+    closeStream();
+    if (nc != null) { nc.close(); }
+    nc = null;
+}
+
+function nsErrorHandler(event:ErrorEvent):void {
+    say("Trouble: nsErrorHandler() " + event.type + " " + event.text);
+    closeStream();
+}
+
+
+
+/*
+=================
+ExternalInterface
+=================
+*/
+
+// a notice field to display error messages inside the flash module
+notice = new TextField();
+notice.width = 300;
+notice.x = (stage.stageWidth - notice.width) / 2;
+notice.y = (stage.stageHeight - notice.height) / 2 + 50;
+notice.multiline = true;
+notice.wordWrap = false;
+notice.autoSize = TextFieldAutoSize.CENTER;
+notice.textColor = 0xFFFFFF;
+notice.visible = false;
+stage.addChild(notice);
+
+// JavaScript interfacing
+if (ExternalInterface.available) {
+    // make functions recognizable by JavaScript
+    ExternalInterface.addCallback("setupAndStream", setupAndStream);
+    ExternalInterface.addCallback("stopStreaming", stopStreaming);
+    
+    // single function to setup and start streaming to/from local addresses (the rest is handled by the Python node app)
+    // the role of "publisher" requires localRTMPServerAddress; the role of "consumer" requires localHTTPTunnelAddress
+    // localRTMPServerAddress and localHTTPTunnelAddress are of the form "protocol://IP:Port/resource_name"
+    function setupAndStream(clientRole:String, streamName:String, fileUploadScriptURL:String, localRTMPServerAddress:String, localHTTPTunnelAddress:String):void {
+        serverStreamName = streamName;
+        role = clientRole;
+        if (role == "publisher") {
+            serverURL = localRTMPServerAddress;
+            if (fileUploadScriptURL == "") {
+                // streaming from webcam
+                setupCamera();
+            }
+            else {
+                // upload a file to stream
+                setupFile(fileUploadScriptURL);
+            }
+        }
+        else {
+            tunnelURL = localHTTPTunnelAddress;
+            displayStream();
+        }
+    }
+    
+    // stop showing the video
+    function stopStreaming():void {
+        closeStream();
+        video.clear();
+        video.attachCamera(null);
+        stage.removeChild(video);
+        video = null;
+    }
+    
+} else {
+    notice.text = "ExternalInterface not available!";
+    notice.visible = true;
+}
+
+function say(msg:String):void {
+    ExternalInterface.call("displayFromFlash", msg);
+}
+
+
+
+/*
+===========
+Stage setup
+===========
+*/
+
+stage.addEventListener(Event.RESIZE, resizeDisplay);
+
+function resizeDisplay(event:Event):void 
+{
+    if (videoAspectRatio == 0) { return; }
+    
+    if ((stage.stageWidth / stage.stageHeight) < videoAspectRatio) 
+    {
+        video.width = stage.stageWidth;
+        video.height = video.width / videoAspectRatio;
+        video.x = 0;
+        video.y = (stage.stageHeight - video.height) / 2;
+    } 
+    else 
+    {
+        video.height = stage.stageHeight;
+        video.width = video.height * videoAspectRatio;
+        video.x = (stage.stageWidth - video.width) / 2;
+        video.y = 0;
+    }
+}
+
+resizeDisplay(new Event("RESIZE"));
