@@ -1,5 +1,6 @@
 import threading
 import asyncore
+import time
 
 from astral.net.tunnel import Tunnel
 from astral.models import Ticket
@@ -56,3 +57,6 @@ class TunnelLoopThread(threading.Thread):
         # to control the on/off. still need that?
         while True:
             asyncore.loop()
+            # TODO this is a little workaround to make sure we don't eat up 100%
+            # CPU at the moment
+            time.sleep(1)
