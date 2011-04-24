@@ -144,6 +144,7 @@ class TicketsHandlerTest(BaseTest):
 class TicketsListHandlerTest(BaseTest):
     def setUp(self):
         super(TicketsListHandlerTest, self).setUp()
+        Node.me()
         [TicketFactory() for _ in range(3)]
 
     def test_get_tickets(self):
@@ -157,4 +158,3 @@ class TicketsListHandlerTest(BaseTest):
             destination = Node.get_by(uuid=ticket['destination'])
             ok_(Ticket.get_by(stream=Stream.get_by(slug=ticket['stream']),
                 source=source, destination=destination))
-

@@ -16,9 +16,9 @@ class TunnelControlThread(threading.Thread):
 
     def run(self):
         while True:
-            ticket = TUNNEL_QUEUE.get()
+            ticket_id = TUNNEL_QUEUE.get()
+            ticket = Ticket.get_by(id=ticket_id)
             log.debug("Found %s in tunnel queue", ticket)
-            # TODO only create tunnel if we are not the source
             self.create_tunnel(ticket.source.ip_address, ticket.source_port,
                     ticket.destination.ip_address, ticket.destination_port)
             TUNNEL_QUEUE.task_done()

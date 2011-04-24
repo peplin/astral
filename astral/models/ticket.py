@@ -60,7 +60,8 @@ class Ticket(Entity, BaseEntityMixin):
 
     @after_insert
     def queue_tunnel_creation(self):
-        TUNNEL_QUEUE.put(self.id)
+        if self.source != self.destination:
+            TUNNEL_QUEUE.put(self.id)
 
     @before_insert
     def set_created_time(self):
