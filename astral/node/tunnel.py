@@ -19,17 +19,18 @@ class TunnelControlThread(threading.Thread):
             ticket_id = TUNNEL_QUEUE.get()
             ticket = Ticket.get_by(id=ticket_id)
             log.debug("Found %s in tunnel queue", ticket)
-            self.create_tunnel(ticket.source.ip_address, ticket.source_port,
+            port = self.create_tunnel(ticket.source.ip_address, ticket.source_port,
                     ticket.destination.ip_address, ticket.destination_port)
             TUNNEL_QUEUE.task_done()
+            ticket.source_port = port
             self.close_expired_tunnels()
 
     def create_tunnel(self, ticket_id, source_ip, source_port,
             destination_ip, destination_port):
-        tunnel = Tunnel(source_ip, source_port, destination_ip,
-                destination_port)
+        tunnel = Tunnel(destination_ip, destination_port)
         log.info("Starting %s", tunnel)
         self.tunnels[ticket_id] = tunnel
+        return tunnel.source_port()
 
     def destroy_tunnel(self, ticket_id):
         tunnel = self.tunnels.pop(ticket_id)

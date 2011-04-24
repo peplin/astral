@@ -8,18 +8,30 @@ import socket, asyncore
 
 
 class Tunnel(asyncore.dispatcher, object):
-    def __init__(self, ip, port, remote_ip, remote_port, backlog=5):
+    """TCP packet forwarding tunnel as an asyncore channel.
+    
+    Forward TCP packets through a tunnel from source to destination and vice
+    versa. The "source" is the intial point of entry - this is where the
+    connections get started. The destination is most likely the service you
+    already have listening on a port somewhere, e.g. an RTMP server.
+
+    """
+    def __init__(self, destination_ip, destination_port, source_ip='',
+            source_port=0, backlog=5):
         super(Tunnel, self).__init__()
-        self.remote_ip = remote_ip
-        self.remote_port = remote_port
+        self.destination_ip = destination_ip
+        self.destination_port = destination_port
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
-        self.bind((ip, port))
+        self.bind((source_ip, source_port))
         self.listen(backlog)
+
+    def source_port(self):
+        return self.socket.getsockname()[1]
 
     def handle_accept(self):
         conn, addr = self.accept()
-        Sender(Receiver(conn), self.remote_ip, self.remote_port)
+        Sender(Receiver(conn), self.destination_ip, self.destination_port)
 
     def __str__(self):
         return "<Tunnel from %s:%s -> %s:%s>" % (self.source_ip,
@@ -56,12 +68,12 @@ class Receiver(asyncore.dispatcher, object):
 
 
 class Sender(asyncore.dispatcher, object):
-    def __init__(self, receiver, remoteaddr, remote_port):
+    def __init__(self, receiver, remoteaddr, destination_port):
         super(Sender, self).__init__()
         self.receiver = receiver
         receiver.sender = self
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((remoteaddr, remote_port))
+        self.connect((remoteaddr, destination_port))
         self.enabled = True
 
     def handle_connect(self):
