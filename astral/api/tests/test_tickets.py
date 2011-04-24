@@ -92,7 +92,8 @@ class TicketsHandlerTest(BaseTest):
         existing_ticket = TicketFactory(stream=stream)
         mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(
-                        {'source': existing_ticket.destination.uuid})
+                        {'source': existing_ticket.destination.uuid,
+                            'source_port': 42})
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(
             self.get_url(stream.tickets_url()), 'POST', body=''),
@@ -107,7 +108,8 @@ class TicketsHandlerTest(BaseTest):
         remote_node = NodeFactory()
         mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(
-                        {'source': remote_node.uuid})
+                        {'source': remote_node.uuid,
+                            'source_port': 42})
         stream = StreamFactory()
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(self.get_url(stream.tickets_url()),
@@ -132,7 +134,8 @@ class TicketsHandlerTest(BaseTest):
         remote_node = NodeFactory()
         mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(
-                        {'source': remote_node.uuid})
+                        {'source': remote_node.uuid,
+                            'source_port': 42})
         stream = StreamFactory()
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(self.get_url(stream.tickets_url()),

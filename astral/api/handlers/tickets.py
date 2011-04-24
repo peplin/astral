@@ -103,6 +103,7 @@ class TicketsHandler(BaseHandler):
             closest = min(unconfirmed_tickets, key=lambda t: t.source.rtt)
             TicketsAPI(closest.source.uri()).confirm(closest.absolute_url())
             closest.confirmed = True
+            session.commit()
             for ticket in set(unconfirmed_tickets) - set([closest]):
                 TicketsAPI(ticket.source.uri()).cancel(ticket.absolute_url())
                 ticket.delete()
