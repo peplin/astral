@@ -1,5 +1,5 @@
 from elixir import ManyToOne, Entity, Boolean, Field, DateTime, Integer
-from elixir.events import after_insert, before_insert
+from elixir.events import after_insert, before_insert, after_update
 import json
 import datetime
 import Queue
@@ -58,9 +58,9 @@ class Ticket(Entity, BaseEntityMixin):
     def emit_new_ticket_event(self):
         Event(message=json.dumps({'type': "ticket", 'data': self.to_dict()}))
 
-    @after_insert
+    @after_update
     def queue_tunnel_creation(self):
-        if self.source != self.destination:
+        if self.confirmed and self.source != self.destination:
             TUNNEL_QUEUE.put(self.id)
 
     @before_insert
