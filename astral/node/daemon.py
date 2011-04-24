@@ -9,10 +9,9 @@ class DaemonThread(threading.Thread):
     """Background thread for garbage collection and other periodic tasks
     outside the scope of the web API.
     """
-    def __init__(self, tunnel_controller):
+    def __init__(self):
         super(DaemonThread, self).__init__()
         self.daemon = True
-        self.tunnel_controller = tunnel_controller
 
     def _cleanup_unconfirmed_tickets(self):
         query = Ticket.unconfirmed()
