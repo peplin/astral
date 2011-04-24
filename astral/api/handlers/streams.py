@@ -38,7 +38,10 @@ class StreamsHandler(BaseHandler):
             # TODO we do this a second time here because sometimes the first one
             # fails, but it never seems to actually attempt to make the request
             # - sinatra shows nothing in the logs. it's difficult to debug
-            # because it's so intermittent.
+            # because it's so intermittent. of course, we don't catch the
+            # NetworkError the second time around, so things couuld expode.
+            # really, just need to figure out what causes the intermittent
+            # failure.
             StreamsAPI(settings.ASTRAL_WEBSERVER).create(
                     source_uuid=stream.source.uuid, name=stream.name,
                     slug=stream.slug, description=stream.description)
