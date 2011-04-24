@@ -14,6 +14,7 @@ class Event(BaseEntityMixin, Entity):
     message = Field(Unicode(96))
 
     def __init__(self, *args, **kwargs):
+        kwargs['message'] = unicode(kwargs['message'])
         super(Event, self).__init__(*args, **kwargs)
         EVENT_QUEUE.put(self)
 
