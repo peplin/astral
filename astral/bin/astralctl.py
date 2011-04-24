@@ -1,10 +1,7 @@
 import sys
 
-from astral.api.client import StreamsAPI
-from astral.api.client import NodesAPI
-from astral.api.client import TicketsAPI
+from astral.api.client import StreamsAPI, NodesAPI, TicketsAPI
 from astral.conf import settings
-from astral.bin.astralnode import NodeCommand
 
 LOCAL_SERVER = "http://localhost:%s" % settings.PORT
 
@@ -41,6 +38,7 @@ class Cmdline():
 
     def usage(self):
         print """Usage: python astral/bin/astractl.py option
+
         Available options:
             createfakenode xxx or -cn xxx
             listnodes or -ln
@@ -56,64 +54,47 @@ class Cmdline():
 
     def createNode(self,arg,ip,portno):
         print "Selected option = ", arg
-        # create JSON message and send to server
         NodesAPI(LOCAL_SERVER).register(ip)
 
     def listnodes(self,arg):
         print "Selected option = ", arg
-        # create JSON message and send to server
         print "List of nodes: ", NodesAPI(LOCAL_SERVER).list()
 
     def liststreams(self,arg):
         print "Selected option = ", arg
-        # create JSON message and send to server
-    #obj_temp = json.JSONEncoder().encode({ "url": "/stream" })
         print "List of streams: " , StreamsAPI(LOCAL_SERVER).list()
 
     def listtickets(self,arg):
         print "Selected option = ", arg
-        # create JSON message and send to server
         print "List of tickets: " , TicketsAPI(LOCAL_SERVER).list()
 
     def stream(self,arg,name, description):
         print "Selected option = ", arg
-        # create JSON message and send to server
         StreamsAPI(LOCAL_SERVER).create(name=name,
                     description=description)
         print "created stream, name = ", name, "description = ", description
 
     def watch(self,arg,streamId):
         print "Selected option = ", arg
-        # create JSON message and send to server
         TicketsAPI(LOCAL_SERVER).create('/stream/'+streamId+'/tickets')
         print "streaming ",streamId
 
     def enableSeeding(self,arg,streamId,destuuid):
         print "Selected option = ", arg
-        # create JSON message and send to server
         TicketsAPI(LOCAL_SERVER).create('/stream/'+streamId+'/tickets',destuuid)
         print "seeding ",streamId , "to", destuuid
 
     def getStreamUrl(self,arg,streamId):
         print "Selected option = ", arg
-        # create JSON message and send to server
 
     def revokeTicket(self,arg,streamId):
         print "Selected option = ", arg
-        # create JSON message and send to server
         url='stream/'+streamId+'/ticket'
         TicketsAPI(LOCAL_SERVER).cancel(url)
 
     def shutdown(self,arg):
         print "Selected option = ", arg
-        # create JSON message and send to server
         NodesAPI(LOCAL_SERVER).unregister()
-
-    def start(self,arg):
-        print "Selected option = ", arg
-        # create JSON message and send to server
-        start = NodeCommand()
-        start.run()
 
 
 def main():

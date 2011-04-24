@@ -85,7 +85,7 @@ class TicketsHandlerTest(BaseTest):
             self.stop)
         response = self.wait()
         eq_(response.code, 200)
-        eq_(Ticket.query.count(), tickets_before + 1)
+        eq_(Ticket.query.count(), tickets_before)
 
     def test_other_known_tickets(self):
         stream = StreamFactory()
@@ -100,7 +100,7 @@ class TicketsHandlerTest(BaseTest):
             self.stop)
         response = self.wait()
         eq_(response.code, 200)
-        eq_(Ticket.query.count(), tickets_before + 2)
+        eq_(Ticket.query.count(), tickets_before + 1)
         ticket = Ticket.query.filter_by(destination=Node.me()).first()
         eq_(ticket.source, existing_ticket.destination)
 
@@ -116,7 +116,7 @@ class TicketsHandlerTest(BaseTest):
             'POST', body=''), self.stop)
         response = self.wait()
         eq_(response.code, 200)
-        eq_(Ticket.query.count(), tickets_before + 2)
+        eq_(Ticket.query.count(), tickets_before + 1)
 
     def test_none_available(self):
         mockito.when(TicketsAPI).create(mockito.any(),
@@ -142,7 +142,7 @@ class TicketsHandlerTest(BaseTest):
             'POST', body=''), self.stop)
         response = self.wait()
         eq_(response.code, 200)
-        eq_(Ticket.query.count(), tickets_before + 2)
+        eq_(Ticket.query.count(), tickets_before + 1)
 
 class TicketsListHandlerTest(BaseTest):
     def setUp(self):

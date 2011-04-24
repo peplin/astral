@@ -108,15 +108,10 @@ class TicketsHandler(BaseHandler):
                 TicketsAPI(ticket.source.uri()).cancel(ticket.absolute_url())
                 ticket.delete()
             session.commit()
-
-        # TODO hm, problem. this self-ticket is the one returned to the browser,
-        # but it's not the one that the tunnel actually gets created for, and
-        # thus it doesn't have a source port. what do we need this self-ticket
-        # for anyway? would it be simpler to just drop it, and reutrn the
-        # closest ticket there as the confirmed one?
-        new_ticket = Ticket(stream=stream, destination=destination,
+        else:
+            closest = Ticket(stream=stream, destination=destination,
                 confirmed=True)
-        self.redirect(new_ticket.absolute_url())
+        self.redirect(closest.absolute_url())
 
     def get(self):
         """Return a JSON list of all known tickets."""

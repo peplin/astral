@@ -9,15 +9,10 @@ class TicketHandler(BaseHandler):
     def _load_ticket(self, stream_slug, destination_uuid):
         stream = Stream.get_by(slug=stream_slug)
         if not destination_uuid:
-            return Ticket.get_by(stream=stream, source=Node.me(),
-                    destination=Node.me())
+            return Ticket.get_by(stream=stream, destination=Node.me())
 
         node = Node.get_by(uuid=destination_uuid)
-        query = Ticket.query.filter_by(stream=stream).filter_by(
-                destination=node)
-        if node == Node.me():
-                    query.filter(Ticket.source != Node.me())
-        return query.first()
+        return Ticket.query.filter_by(stream=stream, destination=node).first()
 
     def delete(self, stream_slug, destination_uuid=None):
         """Stop forwarding the stream to the requesting node."""

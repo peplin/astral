@@ -60,7 +60,18 @@ class Ticket(Entity, BaseEntityMixin):
 
     @after_update
     def queue_tunnel_creation(self):
-        if self.confirmed and self.source != self.destination:
+        """Since Astral is a "pull" system, the person receiving a forwarded
+        stream from us based on this ticket (the destination) is in charge of
+        connecting to us - we don't explicitly send anything to them. 
+
+        This will queue the node up to create a tunnel from the source's RTMP
+        server to a port on the local node. If we created this ticket for
+        ourselves, we will just connect to it from the browser. If it was
+        created in response to a request from another node (i.e. the destination
+        is not us), we don't create any extra tunnels. A tunnel will already
+        exist in that case to bring the stream from somewhere else to here.
+        """
+        if self.confirmed and self.destination == Node.me():
             TUNNEL_QUEUE.put(self.id)
 
     @before_insert
