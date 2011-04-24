@@ -52,7 +52,7 @@ class Cmdline():
            
         
     def usage(self):
-        print "\nUsage: python astral/bin/astractl.py option\nAvailable options:\n1.createfakenode xxx or -cn xxx\n2.listnodes or -ln\n3.liststreams -ls\n4.listtickets or -lt\n5.stream streamname/id description or -st streamname/id description\n6.watch streamname/id or -w streamname/id\n7.seed streamname/id or -se streamname/id\n8.streamurl streamname/id or -su streamname/id\n9.revoketicket ticketId or  -rt ticketId\n10.shutdown or -sh\n"
+        print "\nUsage: python astral/bin/astractl.py option\nAvailable options:\n1.createfakenode xxx or -cn xxx\n2.listnodes or -ln\n3.liststreams -ls\n4.listtickets or -lt\n5.stream streamname/id description or -st streamname/id description\n6.watch streamname/id or -w streamname/id\n7.seed streamname/id or -se streamname/id\n8.streamurl streamname/id or -su streamname/id\n9.revoketicket streamname/id or  -rt streamname/id\n10.shutdown or -sh\n"
 
     def createNode(self,arg,ip,portno):
         print "Selected option = ", arg       
@@ -96,9 +96,10 @@ class Cmdline():
         print "Selected option = ", arg       
         # create JSON message and send to server
 
-    def revokeTicket(self,arg,url):
+    def revokeTicket(self,arg,streamId):
         print "Selected option = ", arg       
         # create JSON message and send to server
+        url='stream/'+streamId+'/ticket'
         TicketsAPI(LOCAL_SERVER).cancel(url)
 
     def shutdown(self,arg):
