@@ -13,7 +13,7 @@ from astral.api.client import NodesAPI, TicketsAPI
 from astral.node.bootstrap import BootstrapThread
 from astral.node.daemon import DaemonThread
 from astral.node.stream import StreamingThread
-from astral.node.tunnel import TunnelControlThread
+from astral.node.tunnel import TunnelControlThread, TunnelLoopThread
 
 import logging
 log = logging.getLogger(__name__)
@@ -27,14 +27,10 @@ class LocalNode(object):
         self.uuid = uuid_override
         BootstrapThread(node=self.node,
                 upstream_limit=self.upstream_limit).start()
-
-        self.streaming_thread = StreamingThread()
-        self.streaming_thread.start()
-
-        self.tunnel_control = TunnelControlThread()
-        self.tunnel_control.start()
-
-        DaemonThread(self.tunnel_control).start()
+        StreamingThread().start()
+        TunnelControlThread().start()
+        TunnelLoopThread().start()
+        DaemonThread().start()
 
         try:
             astral.api.app.run()
@@ -77,4 +73,3 @@ class LocalNode(object):
         self._unregister_from_supernode()
         self._cancel_tickets()
         self._unregister_from_all()
-        self.streaming_thread.stop()

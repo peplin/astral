@@ -25,8 +25,4 @@ class DaemonThread(threading.Thread):
         import time
         while self.is_alive():
             self._cleanup_unconfirmed_tickets()
-            # TODO would like this to happen on demand, and not have to wait for
-            # this to spin up
-            self.tunnel_controller.open_new_tunnels()
-            self.tunnel_controller.close_expired_tunnels()
             time.sleep(10)

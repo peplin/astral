@@ -1,26 +1,34 @@
-from elixir import ManyToOne, Entity, Boolean, Field, DateTime
+from elixir import ManyToOne, Entity, Boolean, Field, DateTime, Integer
 from elixir.events import after_insert, before_insert
 import json
 import datetime
+import Queue
 
 from astral.conf import settings
 from astral.models.base import BaseEntityMixin
 from astral.models.event import Event
 from astral.models.node import Node
 
+TUNNEL_QUEUE = Queue.Queue()
 
 class Ticket(Entity, BaseEntityMixin):
     source = ManyToOne('Node')
+    source_port = Field(Integer)
     destination = ManyToOne('Node')
+    destination_port = Field(Integer)
     stream = ManyToOne('Stream')
     confirmed = Field(Boolean, default=False)
     created = Field(DateTime)
 
-    def __init__(self, source=None, destination=None, *args, **kwargs):
+    def __init__(self, source=None, source_port=None, destination=None,
+            destination_port=None, *args, **kwargs):
         source = source or Node.me()
+        source_port = source_port or settings.RTMP_PORT
         destination = destination or Node.me()
-        super(Ticket, self).__init__(source=source,
-                destination=destination, *args, **kwargs)
+        destination_port = destination_port or settings.RTMP_TUNNEL_PORT
+        super(Ticket, self).__init__(source=source, source_port=source_port,
+                destination=destination, destination_port=destination_port,
+                *args, **kwargs)
 
     def absolute_url(self):
         return '/stream/%s/ticket/%s' % (self.stream.slug,
@@ -28,7 +36,9 @@ class Ticket(Entity, BaseEntityMixin):
 
     def to_dict(self):
         return {'source': self.source.uuid,
+                'source_port': self.source_port,
                 'destination': self.destination.uuid,
+                'destination_port': self.destination_port,
                 'stream': self.stream.slug}
 
     @classmethod
@@ -47,6 +57,10 @@ class Ticket(Entity, BaseEntityMixin):
     @after_insert
     def emit_new_ticket_event(self):
         Event(message=json.dumps({'type': "ticket", 'data': self.to_dict()}))
+
+    @after_insert
+    def queue_tunnel_creation(self):
+        TUNNEL_QUEUE.put(self.id)
 
     @before_insert
     def set_created_time(self):

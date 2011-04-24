@@ -32,13 +32,15 @@ class Receiver(asyncore.dispatcher, object):
         self.from_remote_buffer = ''
         self.to_remote_buffer = ''
         self.sender = None
+        self.enabled = True
 
     def handle_connect(self):
         pass
 
     def handle_read(self):
         read = self.recv(4096)
-        self.from_remote_buffer += read
+        if self.enabled:
+            self.from_remote_buffer += read
 
     def writable(self):
         return (len(self.to_remote_buffer) > 0)
@@ -60,13 +62,15 @@ class Sender(asyncore.dispatcher, object):
         receiver.sender = self
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((remoteaddr, remote_port))
+        self.enabled = True
 
     def handle_connect(self):
         pass
 
     def handle_read(self):
         read = self.recv(4096)
-        self.receiver.to_remote_buffer += read
+        if self.enabled:
+            self.receiver.to_remote_buffer += read
 
     def writable(self):
         return len(self.receiver.from_remote_buffer) > 0
