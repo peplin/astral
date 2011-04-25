@@ -45,6 +45,14 @@ class BootstrapThread(threading.Thread):
                     node = Node.from_dict(node)
                     log.info("Stored %s from %s", node, base_url)
 
+    def register_with_origin(self):
+        try:
+            NodesAPI(settings.ASTRAL_WEBSERVER).register(
+                    self.node().to_dict())
+        except NetworkError, e:
+            log.warning("Can't connect to server to register as a "
+                    "supernode: %s", e)
+
     def register_with_supernode(self):
         Node.update_supernode_rtt()
         # TODO hacky hacky hacky. moving query inside of the node causes
@@ -58,12 +66,7 @@ class BootstrapThread(threading.Thread):
                 self.node().supernode = True
                 log.info("Registering %s as a supernode, none others found",
                         self.node())
-                try:
-                    NodesAPI(settings.ASTRAL_WEBSERVER).register(
-                            self.node().to_dict())
-                except NetworkError, e:
-                    log.warning("Can't connect to server to register as a "
-                            "supernode: %s", e)
+                self.register_with_origin()
             else:
                 try:
                     NodesAPI(self.node().primary_supernode.uri()).register(
@@ -76,6 +79,9 @@ class BootstrapThread(threading.Thread):
                     self.load_dynamic_bootstrap_nodes(
                             self.node().primary_supernode.uri())
         else:
+            log.info("Registering %s as a supernode, my database told me so",
+                    self.node())
+            self.register_with_origin()
             for supernode in Node.supernodes():
                 if supernode != Node.me():
                     try:
