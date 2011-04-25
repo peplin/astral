@@ -60,7 +60,8 @@ class LocalNode(object):
             NodesAPI(node.uri()).unregister(self.node().absolute_url())
 
     def _cancel_tickets(self):
-        for ticket in Ticket.query.filter_by(source=Node.me()):
+        for ticket in Ticket.query.filter_by(source=Node.me()).filter(
+                Ticket.destination != Node.me()):
             log.info("Cancelling %s", ticket)
             TicketsAPI(ticket.destination.uri()).delete(ticket.absolute_url())
 
