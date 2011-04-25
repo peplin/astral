@@ -36,8 +36,10 @@ LOGGING = {
 
 if DEBUG:
     ASTRAL_WEBSERVER = "http://localhost:4567"
+    DATABASE_PATH = ":memory:"
 else:
     ASTRAL_WEBSERVER = "http://astral-video.heroku.com"
+    DATABASE_PATH = "db"
 
 BOOTSTRAP_NODES = [
 ]

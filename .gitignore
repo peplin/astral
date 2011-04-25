@@ -7,3 +7,4 @@ MANIFEST
 *.egg*
 .coverage
 htmlcov
+db*
