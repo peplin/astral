@@ -68,7 +68,8 @@ class BaseHandler(tornado.web.RequestHandler):
     def options(self, *args, **kwargs):
         """Insecure, just allows cross-origin requests for all handlers."""
         self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Methods", "POST, DELETE, OPTIONS")
+        self.set_header("Access-Control-Allow-Methods",
+                "POST, DELETE, OPTIONS, PUT, GET")
         self.set_header("Access-Control-Allow-Headers", "X-Requested-With")
         self.set_header("Access-Control-Max-Age", "180")
 
