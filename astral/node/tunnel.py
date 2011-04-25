@@ -14,14 +14,16 @@ class TunnelControlThread(threading.Thread):
     def __init__(self):
         super(TunnelControlThread, self).__init__()
         self.daemon = True
+        self.tunnels = dict()
 
     def run(self):
         while True:
             ticket_id = TUNNEL_QUEUE.get()
             ticket = Ticket.get_by(id=ticket_id)
             log.debug("Found %s in tunnel queue", ticket)
-            port = self.create_tunnel(ticket.source.ip_address, ticket.source_port,
-                    ticket.destination.ip_address, ticket.destination_port)
+            port = self.create_tunnel(ticket.id, ticket.source.ip_address,
+                    ticket.source_port, ticket.destination.ip_address,
+                    ticket.destination_port)
             TUNNEL_QUEUE.task_done()
             ticket.source_port = port
             self.close_expired_tunnels()
@@ -39,7 +41,7 @@ class TunnelControlThread(threading.Thread):
         tunnel.handle_close()
 
     def close_expired_tunnels(self):
-        for ticket_id, tunnel in self.tunnels.values():
+        for ticket_id, tunnel in self.tunnels.items():
             if not Ticket.get_by(id=ticket_id):
                 self.destroy_tunnel(ticket_id)
 
@@ -48,7 +50,6 @@ class TunnelLoopThread(threading.Thread):
     def __init__(self):
         super(TunnelLoopThread, self).__init__()
         self.daemon = True
-        self.tunnels = dict()
 
     def run(self):
         # TODO this is going to just spin when we first start up and have no
