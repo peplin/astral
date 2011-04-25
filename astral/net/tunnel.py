@@ -9,7 +9,7 @@ import socket, asyncore
 
 class Tunnel(asyncore.dispatcher, object):
     """TCP packet forwarding tunnel as an asyncore channel.
-    
+
     Forward TCP packets through a tunnel from source to destination and vice
     versa. The "source" is the intial point of entry - this is where the
     connections get started. The destination is most likely the service you
@@ -26,6 +26,11 @@ class Tunnel(asyncore.dispatcher, object):
         self.bind((source_ip, source_port))
         self.listen(backlog)
 
+    @property
+    def source_ip(self):
+        return self.socket.getsockname()[0]
+
+    @property
     def source_port(self):
         return self.socket.getsockname()[1]
 
