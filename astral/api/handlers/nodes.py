@@ -14,6 +14,7 @@ class NodesHandler(BaseHandler):
         """Add the node specified in POSTed JSON to the list of known nodes."""
         uuid = self.get_json_argument('uuid')
         if not Node.get_by(uuid=uuid):
-            self.request.arguments['ip_address'] = self.request.remote_ip
+            self.request.arguments.setdefault('ip_address',
+                    self.request.remote_ip)
             Node.from_dict(self.request.arguments)
             session.commit()
