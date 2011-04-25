@@ -58,6 +58,7 @@ class Ticket(Entity, BaseEntityMixin):
     def emit_new_ticket_event(self):
         Event(message=json.dumps({'type': "ticket", 'data': self.to_dict()}))
 
+    @after_insert
     @after_update
     def queue_tunnel_creation(self):
         """Since Astral is a "pull" system, the person receiving a forwarded

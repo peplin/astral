@@ -80,13 +80,19 @@ class TicketsHandler(BaseHandler):
         else:
             destination = Node.me()
 
+        log.debug("Trying to create a ticket to serve %s to %s",
+                stream, destination)
         new_ticket = self._already_streaming(stream, destination)
         if new_ticket:
+            log.info("%s already has a ticket for %s: %s", destination,
+                    stream, new_ticket)
             return self.redirect(new_ticket.absolute_url())
 
         # TODO base this on actual outgoing bandwidth
         if (Ticket.query.filter_by(source=Node.me()).count() >
                 settings.OUTGOING_STREAM_LIMIT):
+            log.info("Can't stream %s to %s, already at limit", stream,
+                    destination)
             raise HTTPError(412)
 
         if stream.source != Node.me():
@@ -99,8 +105,11 @@ class TicketsHandler(BaseHandler):
                 raise HTTPError(412)
             for ticket in unconfirmed_tickets:
                 ticket.source.update_rtt()
+            log.debug("Received %d unconfirmed tickets: %s",
+                    len(unconfirmed_tickets), unconfirmed_tickets)
 
             closest = min(unconfirmed_tickets, key=lambda t: t.source.rtt)
+            log.debug("Closest ticket of the unconfirmed ones is %s", closest)
             TicketsAPI(closest.source.uri()).confirm(closest.absolute_url())
             closest.confirmed = True
             session.commit()
@@ -111,6 +120,9 @@ class TicketsHandler(BaseHandler):
         else:
             closest = Ticket(stream=stream, destination=destination,
                 confirmed=True)
+            log.info("%s is the source of %s, created %s", destination,
+                    stream, closest)
+        session.commit()
         self.redirect(closest.absolute_url())
 
     def get(self):
