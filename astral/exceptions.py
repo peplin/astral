@@ -3,3 +3,6 @@ class NotConfigured(UserWarning):
 
 class NetworkError(Exception):
     """Can't contact the origin webserver."""
+
+class NotFound(Exception):
+    """Can't contact the origin webserver."""

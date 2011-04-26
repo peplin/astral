@@ -19,15 +19,16 @@ class Ticket(Entity, BaseEntityMixin):
     stream = ManyToOne('Stream')
     confirmed = Field(Boolean, default=False)
     created = Field(DateTime)
+    hops = Field(Integer, default=0)
 
     def __init__(self, source=None, source_port=None, destination=None,
-            destination_port=None, *args, **kwargs):
+            destination_port=None, hops=0, *args, **kwargs):
         source = source or Node.me()
         source_port = source_port or settings.RTMP_PORT
         destination = destination or Node.me()
         super(Ticket, self).__init__(source=source, source_port=source_port,
                 destination=destination, destination_port=destination_port,
-                *args, **kwargs)
+                hops=hops, *args, **kwargs)
 
     def absolute_url(self):
         return '/stream/%s/ticket/%s' % (self.stream.slug,
@@ -38,7 +39,8 @@ class Ticket(Entity, BaseEntityMixin):
                 'source_port': self.source_port,
                 'destination': self.destination.uuid,
                 'destination_port': self.destination_port,
-                'stream': self.stream.slug}
+                'stream': self.stream.slug,
+                'hops': self.hops}
 
     @classmethod
     def unconfirmed(cls, query=None):
@@ -80,5 +82,5 @@ class Ticket(Entity, BaseEntityMixin):
             self.created = datetime.datetime.now()
 
     def __repr__(self):
-        return u'<Ticket %s: %s from %s to %s>' % (
-                self.id, self.stream, self.source, self.destination)
+        return u'<Ticket %s: %s from %s to %s, %d hops from origin>' % (
+                self.id, self.stream, self.source, self.destination, self.hops)

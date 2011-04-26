@@ -19,6 +19,9 @@ class TicketHandler(BaseHandler):
         ticket = self._load_ticket(stream_slug, destination_uuid)
         if ticket:
             ticket.delete()
+        # TODO if we were the destination, need to find another ticket
+        # TODO if we were forwarding this to someone else, need to propagate the
+        # delete to them if we can't find another
 
     def get(self, stream_slug, destination_uuid=None):
         # TODO could require target nodes to hit this every so often as a
@@ -35,7 +38,6 @@ class TicketHandler(BaseHandler):
             session.commit()
             ticket = self._load_ticket(stream_slug, destination_uuid)
             self.write({'ticket': ticket.to_dict()})
-            return ticket
 
     def put(self, stream_slug, destination_uuid=None):
         """Edit tickets, most likely just confirming them."""
