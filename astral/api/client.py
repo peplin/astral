@@ -89,8 +89,7 @@ class StreamsAPI(NodeAPI):
 
     def create(self, **kwargs):
         response = self.post('/streams', payload=json.dumps(kwargs))
-        if response.status == 200:
-            return response.status == 200
+        return response.status == 200
 
 class TicketsAPI(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
@@ -98,8 +97,6 @@ class TicketsAPI(NodeAPI):
             {'destination_uuid': destination_uuid}))
         if response.status == 200:
             return response.body['ticket']
-        elif response.status == 412:
-            print "No source found"
 
     def list(self):
         return self.get('/tickets').body['tickets']

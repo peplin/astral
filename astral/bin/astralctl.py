@@ -81,13 +81,14 @@ class Cmdline():
 
     def stream(self,arg,name, description):
         print "Selected option = ", arg
-        StreamsAPI(LOCAL_SERVER).create(name=name,
-                    description=description)
+        StreamsAPI(LOCAL_SERVER).create(name=name, description=description)
         print "created stream, name = ", name, "description = ", description
 
     def watch(self,arg,streamId):
         print "Selected option = ", arg
-        TicketsAPI(LOCAL_SERVER).create('/stream/'+streamId+'/tickets')
+        ticket = TicketsAPI(LOCAL_SERVER).create('/stream/'+streamId+'/tickets')
+        if not ticket:
+            print "No source found"
         print "streaming ",streamId
 
     def enableSeeding(self,arg,streamId,destuuid):

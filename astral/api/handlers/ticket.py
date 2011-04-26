@@ -38,7 +38,6 @@ class TicketHandler(BaseHandler):
             session.commit()
             ticket = self._load_ticket(stream_slug, destination_uuid)
             self.write({'ticket': ticket.to_dict()})
-            return ticket
 
     def put(self, stream_slug, destination_uuid=None):
         """Edit tickets, most likely just confirming them."""
