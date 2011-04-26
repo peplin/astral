@@ -25,7 +25,6 @@ class Ticket(Entity, BaseEntityMixin):
         source = source or Node.me()
         source_port = source_port or settings.RTMP_PORT
         destination = destination or Node.me()
-        destination_port = destination_port or settings.RTMP_TUNNEL_PORT
         super(Ticket, self).__init__(source=source, source_port=source_port,
                 destination=destination, destination_port=destination_port,
                 *args, **kwargs)
