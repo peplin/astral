@@ -5,7 +5,7 @@ import random
 import string
 
 from astral.conf import settings
-from astral.exceptions import NetworkError
+from astral.exceptions import NetworkError, NotFound
 
 import logging
 log = logging.getLogger(__name__)
@@ -78,6 +78,12 @@ class NodesAPI(NodeAPI):
 
 
 class StreamsAPI(NodeAPI):
+    def find(self, slug):
+        try:
+            return self.get('/stream/%s' % slug).body['stream']
+        except restkit.ResourceNotFound, e:
+            raise NotFound(e)
+
     def list(self):
         return self.get('/streams').body['streams']
 

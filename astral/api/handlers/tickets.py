@@ -2,9 +2,9 @@ from tornado.web import HTTPError
 
 from astral.conf import settings
 from astral.api.handlers.base import BaseHandler
-from astral.api.client import TicketsAPI, NodesAPI
+from astral.api.client import TicketsAPI, NodesAPI, StreamsAPI
 from astral.models import Ticket, Node, Stream, session
-from astral.exceptions import NetworkError
+from astral.exceptions import NetworkError, NotFound
 
 import logging
 log = logging.getLogger(__name__)
@@ -73,7 +73,15 @@ class TicketsHandler(BaseHandler):
         # TODO break this method up, it's gotten quite big and complicated
         stream = Stream.get_by(slug=stream_slug)
         if not stream:
-            raise HTTPError(404)
+            try:
+                stream_data = StreamsAPI(settings.ASTRAL_WEBSERVER).find(
+                        stream_slug)
+            except NetworkError, e:
+                log.warning("Can't connect to server: %s", e)
+            except NotFound:
+                raise HTTPError(404)
+            else:
+                stream = Stream.from_dict(stream_data)
         destination_uuid = self.get_json_argument('destination_uuid', '')
         if destination_uuid:
             destination = Node.get_by(uuid=destination_uuid)
