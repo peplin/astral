@@ -55,7 +55,7 @@ class Cmdline():
             seed streamname/id destuuid or -se streamname/id destuuid
             streamurl streamname/id or -su streamname/id
             revoketicket streamname/id or  -rt streamname/id
-            deletefakenode nodeuuid or -dn nodeuuid
+            deletefakenode count listofnodeuuids or -dn count listofnodeuuids
             shutdown or -sh
         """
 
