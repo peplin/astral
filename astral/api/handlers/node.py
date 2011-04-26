@@ -1,4 +1,4 @@
-import tornado.ioloop
+import tornado.ioloop, tornado.web
 
 from astral.api.handlers.base import BaseHandler
 from astral.models.node import Node
@@ -27,3 +27,12 @@ class NodeHandler(BaseHandler):
                     closest_supernode, node)
             NodesAPI(closest_supernode.absolute_url()).unregister(node)
         node.delete()
+
+    def get(self, node_uuid=None):
+        if not node_uuid:
+            node = Node.get_by(uuid=Node.me().uuid)
+        else:
+            node = Node.get_by(uuid=node_uuid)
+        if not node:
+            raise tornado.web.HTTPError(404)
+        self.write({'node': node.to_dict()})
