@@ -3,7 +3,7 @@ import asyncore
 import time
 
 from astral.net.tunnel import Tunnel
-from astral.models import Ticket
+from astral.models import Ticket, Node, session
 from astral.models.ticket import TUNNEL_QUEUE
 
 import logging
@@ -21,22 +21,26 @@ class TunnelControlThread(threading.Thread):
             ticket_id = TUNNEL_QUEUE.get()
             ticket = Ticket.get_by(id=ticket_id)
             log.debug("Found %s in tunnel queue", ticket)
-            port = self.create_tunnel(ticket.id, ticket.source.ip_address,
-                    ticket.source_port, ticket.destination.ip_address,
-                    ticket.destination_port)
+            if ticket.source == Node.me():
+                source_ip = "127.0.0.1"
+            else:
+                source_ip = ticket.source.ip_address
+            port = self.create_tunnel(ticket.id, source_ip, ticket.source_port)
             TUNNEL_QUEUE.task_done()
-            if not ticket.source_port:
-                ticket.source_port = port
+            if not ticket.destination_port or ticket.destination_port != port:
+                ticket.destination_port = port
+            session.commit()
             self.close_expired_tunnels()
 
-    def create_tunnel(self, ticket_id, source_ip, source_port,
-            destination_ip, destination_port):
+    def create_tunnel(self, ticket_id, source_ip, source_port):
         tunnel = self.tunnels.get(ticket_id)
         if not tunnel:
-            tunnel = Tunnel(destination_ip, destination_port)
+            tunnel = Tunnel(source_ip, source_port)
             log.info("Starting %s", tunnel)
             self.tunnels[ticket_id] = tunnel
-        return tunnel.source_port
+        else:
+            log.info("Found existing %s", tunnel)
+        return tunnel.bind_port
 
     def destroy_tunnel(self, ticket_id):
         tunnel = self.tunnels.pop(ticket_id)

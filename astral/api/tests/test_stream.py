@@ -17,14 +17,6 @@ class StreamHandlerTest(BaseTest):
         eq_(result['stream']['slug'], stream.slug)
         eq_(result['stream']['name'], stream.name)
 
-    def test_modify_streaming_status_via_get(self):
-        stream = StreamFactory()
-        session.commit()
-        eq_(stream.streaming, False)
-        response = self.fetch(stream.absolute_url() + "?streaming=true")
-        eq_(response.code, 200)
-        eq_(stream.streaming, True)
-
     def test_resume_stream(self):
         stream = StreamFactory()
         session.commit()
