@@ -1,5 +1,5 @@
 from astral.api.handlers.base import BaseHandler
-from astral.models import Ticket, Node, Stream
+from astral.models import Ticket, Node, Stream, session
 
 import logging
 log = logging.getLogger(__name__)
@@ -25,6 +25,16 @@ class TicketHandler(BaseHandler):
         # heartbeat
         ticket = self._load_ticket(stream_slug, destination_uuid)
         if ticket:
+            # In case we lost the tunnel, just make sure it exists
+            ticket.queue_tunnel_creation()
+            # TODO this is unideal, but we need to get the new port if it
+            # changed. combination of sleep and db flush seems to do it somewhat
+            # reliably, but it's still a race condition.
+            import time
+            time.sleep(1)
+            session.commit()
+            ticket = self._load_ticket(stream_slug, destination_uuid)
+            print ticket.destination_port
             self.write({'ticket': ticket.to_dict()})
 
     def put(self, stream_slug, destination_uuid=None):

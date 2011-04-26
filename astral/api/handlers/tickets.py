@@ -86,6 +86,8 @@ class TicketsHandler(BaseHandler):
         if new_ticket:
             log.info("%s already has a ticket for %s: %s", destination,
                     stream, new_ticket)
+            # In case we lost the tunnel, just make sure it exists
+            new_ticket.queue_tunnel_creation()
             return self.redirect(new_ticket.absolute_url())
 
         # TODO base this on actual outgoing bandwidth

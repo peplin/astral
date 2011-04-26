@@ -27,7 +27,7 @@ class TunnelControlThread(threading.Thread):
                 source_ip = ticket.source.ip_address
             port = self.create_tunnel(ticket.id, source_ip, ticket.source_port)
             TUNNEL_QUEUE.task_done()
-            if not ticket.destination_port:
+            if not ticket.destination_port or ticket.destination_port != port:
                 ticket.destination_port = port
                 session.commit()
             self.close_expired_tunnels()
@@ -38,6 +38,8 @@ class TunnelControlThread(threading.Thread):
             tunnel = Tunnel(source_ip, source_port)
             log.info("Starting %s", tunnel)
             self.tunnels[ticket_id] = tunnel
+        else:
+            log.info("Found existing %s", tunnel)
         return tunnel.bind_port
 
     def destroy_tunnel(self, ticket_id):
