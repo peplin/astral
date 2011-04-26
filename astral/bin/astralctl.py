@@ -37,7 +37,8 @@ class Cmdline():
             elif argv[1]=='-rt' or argv[1]== 'revoketicket':
                 self.revokeTicket(argv[1],argv[2])
             elif argv[1]=='-dn' or argv[1]== 'deletenode':
-                self.deletenode(argv[1],argv[2])
+                for i in range(3,len(argv)):
+                   self.deletenode(argv[0],argv[i])
             elif argv[1]=='-sh' or argv[1]== 'shutdown':
                 self.shutdown(argv[1])
 
@@ -54,7 +55,7 @@ class Cmdline():
             seed streamname/id destuuid or -se streamname/id destuuid
             streamurl streamname/id or -su streamname/id
             revoketicket streamname/id or  -rt streamname/id
-            deletenode nodeuuid or -dn nodeuuid
+            deletefakenode nodeuuid or -dn nodeuuid
             shutdown or -sh
         """
 
@@ -64,7 +65,6 @@ class Cmdline():
             ip = faker.internet.ip_address()
             uuid = unicode(random.randrange(1000, 1000000))
             port = random.randrange(1000, 10000)
-            print "&&&&&&&&&&&&&&&&", ip , uuid , port
             NodesAPI(LOCAL_SERVER).register({'ip_address': ip,'uuid': uuid,'port': port})
 
     def listnodes(self,arg):
@@ -97,6 +97,10 @@ class Cmdline():
 
     def getStreamUrl(self,arg,streamId):
         print "Selected option = ", arg
+        url='stream/'+streamId+'/ticket'
+        ticket = TicketsAPI(LOCAL_SERVER).getticket(url).body
+        dest = ticket['ticket']['destination_port']
+        print "stream url: " "rtmp://localhost:%d/astral"%dest 
 
     def revokeTicket(self,arg,streamId):
         print "Selected option = ", arg
