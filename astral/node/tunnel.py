@@ -29,7 +29,7 @@ class TunnelControlThread(threading.Thread):
             TUNNEL_QUEUE.task_done()
             if not ticket.destination_port or ticket.destination_port != port:
                 ticket.destination_port = port
-                session.commit()
+            session.commit()
             self.close_expired_tunnels()
 
     def create_tunnel(self, ticket_id, source_ip, source_port):

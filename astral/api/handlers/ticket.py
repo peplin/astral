@@ -34,7 +34,6 @@ class TicketHandler(BaseHandler):
             time.sleep(1)
             session.commit()
             ticket = self._load_ticket(stream_slug, destination_uuid)
-            print ticket.destination_port
             self.write({'ticket': ticket.to_dict()})
 
     def put(self, stream_slug, destination_uuid=None):
