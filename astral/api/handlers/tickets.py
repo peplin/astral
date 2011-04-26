@@ -35,7 +35,9 @@ class TicketsHandler(BaseHandler):
                             Node.absolute_url(source))
                     source = Node.from_dict(source_node_data)
                 return Ticket(stream=stream, source=source,
-                        source_port=ticket_data['source_port'])
+                        source_port=ticket_data['source_port'],
+                        destination=destination,
+                        hops=ticket_data['hops'] + 1)
 
     def _request_stream_from_watchers(self, stream, destination):
         tickets = []
