@@ -63,7 +63,7 @@ class Ticket(Entity, BaseEntityMixin):
     def queue_tunnel_creation(self):
         """Since Astral is a "pull" system, the person receiving a forwarded
         stream from us based on this ticket (the destination) is in charge of
-        connecting to us - we don't explicitly send anything to them. 
+        connecting to us - we don't explicitly send anything to them.
 
         This will queue the node up to create a tunnel from the source's RTMP
         server to a port on the local node. If we created this ticket for

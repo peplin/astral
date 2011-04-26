@@ -96,6 +96,13 @@ class TicketsHandler(BaseHandler):
             raise HTTPError(412)
 
         if stream.source != Node.me():
+            # TODO before we ask others, we should check if we have a ticket
+            # from somewhere with destination us. then we could offer that to
+            # the requester. if so, create the ticket with the "source port" as
+            # the destination port of the existing ticket. the requester will
+            # grab use that destination as their tunnel's source, and pop open
+            # another port on their localhost for the browser.
+
             # TODO if we're not a supernode, may not want to do a ton of query
             # work for another client, since they could do it themselves. the
             # point is to contact nodes we know of but they don't. perhaps
