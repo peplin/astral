@@ -26,7 +26,7 @@ class StreamsHandler(BaseHandler):
             self.request.arguments['description'] = (
                     self.request.arguments['description'][0])
 
-        self.request.arguments['source'] = Node.me()
+        self.request.arguments.setdefault('source', Node.me().uuid)
         stream = Stream.from_dict(self.request.arguments)
         try:
             StreamsAPI(settings.ASTRAL_WEBSERVER).create(

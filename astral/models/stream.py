@@ -2,7 +2,7 @@ from elixir import Field, Unicode, Entity, ManyToOne, Boolean, Text
 from elixir.events import after_insert, before_insert
 import json
 
-from astral.models import session
+from astral.models import session, Node
 from astral.models.base import BaseEntityMixin, slugify
 from astral.models.event import Event
 
@@ -28,7 +28,9 @@ class Stream(BaseEntityMixin, Entity):
     def from_dict(cls, data):
         stream = Stream.get_by(name=data['name'])
         if not stream:
-            stream = cls(source=data['source'], name=data['name'],
+            source = Node.get_by(uuid=data.get('source') or
+                    data.get('source_uuid'))
+            stream = cls(source=source, name=data['name'],
                     description=data.get('description', ''))
             session.commit()
         return stream

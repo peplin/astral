@@ -2,11 +2,11 @@ import threading
 from restkit import RequestFailed
 
 
-from astral.models import Node, session
+from astral.models import Node, session, Stream
 from astral.exceptions import NetworkError
 from astral.node.upstream import UpstreamCheckThread
 from astral.conf import settings
-from astral.api.client import NodesAPI
+from astral.api.client import NodesAPI, StreamsAPI
 
 import logging
 log = logging.getLogger(__name__)
@@ -44,6 +44,19 @@ class BootstrapThread(threading.Thread):
                 else:
                     node = Node.from_dict(node)
                     log.info("Stored %s from %s", node, base_url)
+
+    def load_streams(self, base_url=None):
+        base_url = base_url or settings.ASTRAL_WEBSERVER
+        try:
+            streams = StreamsAPI(base_url).list()
+        except NetworkError, e:
+            log.warning("Can't connect to server: %s", e)
+        else:
+            log.debug("Streams returned from the server: %s", streams)
+            for stream in streams:
+                stream = Stream.from_dict(stream)
+                log.info("Stored %s from %s", stream, base_url)
+
 
     def register_with_origin(self):
         try:
@@ -103,3 +116,4 @@ class BootstrapThread(threading.Thread):
         self.load_static_bootstrap_nodes()
         self.load_dynamic_bootstrap_nodes()
         self.register_with_supernode()
+        self.load_streams()

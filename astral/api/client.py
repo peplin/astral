@@ -81,7 +81,6 @@ class StreamsAPI(NodeAPI):
     def list(self):
         return self.get('/streams').body['streams']
 
-
     def create(self, **kwargs):
         response = self.post('/streams', payload=json.dumps(kwargs))
         return response.status == 200
