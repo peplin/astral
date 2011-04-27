@@ -74,23 +74,34 @@ class BootstrapThread(threading.Thread):
         session.close_all()
 
         if not self.node().supernode:
-            self.node().primary_supernode = Node.closest_supernode()
-            if not self.node().primary_supernode:
+            if not Node.supernodes():
                 self.node().supernode = True
                 log.info("Registering %s as a supernode, none others found",
                         self.node())
                 self.register_with_origin()
             else:
-                try:
-                    NodesAPI(self.node().primary_supernode.uri()).register(
-                            self.node().to_dict())
-                except NetworkError, e:
-                    # TODO try another?
-                    log.warning("Can't connect to supernode %s to register"
-                            ": %s", self.node().primary_supernode, e)
-                else:
-                    self.load_dynamic_bootstrap_nodes(
-                            self.node().primary_supernode.uri())
+                for supernode in Node.supernodes().order_by('rtt'):
+                    self.node().primary_supernode = supernode
+                    try:
+                        NodesAPI(self.node().primary_supernode.uri()).register(
+                                self.node().to_dict())
+                    except NetworkError, e:
+                        log.warning("Can't connect to supernode %s to register"
+                                ": %s", self.node().primary_supernode, e)
+                        self.node().primary_supernode = None
+                    except RequestFailed, e:
+                        log.warning("%s rejected us as a child node: %s",
+                                supernode, e)
+                        self.node().primary_supernode = None
+                    else:
+                        self.load_dynamic_bootstrap_nodes(
+                                self.node().primary_supernode.uri())
+                if not self.node().primary_supernode:
+                    self.node().supernode = True
+                    log.info("No supernode could take us - "
+                            "registering ourselves %s as a supernode",
+                            self.node())
+                    self.register_with_origin()
         else:
             log.info("Registering %s as a supernode, my database told me so",
                     self.node())
