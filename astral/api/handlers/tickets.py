@@ -11,13 +11,16 @@ log = logging.getLogger(__name__)
 
 
 class TicketsHandler(BaseHandler):
-    def _already_streaming(self, stream, destination):
+    @classmethod
+    def _already_streaming(cls, stream, destination):
         return Ticket.get_by(stream=stream, destination=destination)
 
-    def _already_seeding(self, ticket):
+    @classmethod
+    def _already_seeding(cls, ticket):
         return Node.me() in [ticket.destination, ticket.stream.source]
 
-    def _offer_ourselves(self, stream, destination):
+    @classmethod
+    def _offer_ourselves(cls, stream, destination):
         ticket = Ticket.get_by(stream=stream, destination=Node.me())
         if ticket:
             new_ticket = Ticket(stream=stream, destination=destination,
@@ -27,7 +30,8 @@ class TicketsHandler(BaseHandler):
                 destination)
             return new_ticket
 
-    def _request_stream_from_node(self, stream, node, destination):
+    @classmethod
+    def _request_stream_from_node(cls, stream, node, destination):
         try:
             ticket_data = TicketsAPI(node.uri()).create(stream.tickets_url(),
                     destination_uuid=destination.uuid)
@@ -48,42 +52,47 @@ class TicketsHandler(BaseHandler):
                         destination=destination,
                         hops=ticket_data['hops'] + 1)
 
-    def _request_stream_from_watchers(self, stream, destination):
+    @classmethod
+    def _request_stream_from_watchers(cls, stream, destination):
         tickets = []
         for ticket in Ticket.query.filter_by(stream=stream):
-            if self._already_seeding(ticket):
+            if cls._already_seeding(ticket):
                 return [ticket]
             else:
-                tickets.append(self._request_stream_from_node(stream,
+                tickets.append(cls._request_stream_from_node(stream,
                         ticket.destination, destination=destination))
         return filter(None, tickets)
 
-    def _request_stream_from_supernodes(self, stream, destination):
+    @classmethod
+    def _request_stream_from_supernodes(cls, stream, destination):
         tickets = []
         for supernode in Node.supernodes():
-            tickets.append(self._request_stream_from_node(stream, supernode,
+            tickets.append(cls._request_stream_from_node(stream, supernode,
                 destination))
         return filter(None, tickets)
 
-    def _request_stream_from_source(self, stream, destination):
-        return [self._request_stream_from_node(stream, stream.source,
+    @classmethod
+    def _request_stream_from_source(cls, stream, destination):
+        return [cls._request_stream_from_node(stream, stream.source,
             destination)]
 
-    def _request_stream(self, stream, destination):
+    @classmethod
+    def _request_stream(cls, stream, destination):
         unconfirmed_tickets = []
-        for possible_source_method in [self._request_stream_from_watchers,
-                self._request_stream_from_supernodes,
-                self._request_stream_from_source]:
+        for possible_source_method in [cls._request_stream_from_watchers,
+                cls._request_stream_from_supernodes,
+                cls._request_stream_from_source]:
             unconfirmed_tickets.extend(possible_source_method(stream,
                 destination))
         return filter(None, unconfirmed_tickets)
 
-    def _request_stream_from_others(self, stream, destination):
+    @classmethod
+    def _request_stream_from_others(cls, stream, destination):
             # TODO if we're not a supernode, may not want to do a ton of query
             # work for another client, since they could do it themselves. the
             # point is to contact nodes we know of but they don't. perhaps
             # instead we return a list of nodes so they can do it themselves?
-            unconfirmed_tickets = self._request_stream(stream, destination)
+            unconfirmed_tickets = cls._request_stream(stream, destination)
             if not unconfirmed_tickets:
                 raise HTTPError(412)
             for ticket in unconfirmed_tickets:
@@ -101,6 +110,51 @@ class TicketsHandler(BaseHandler):
                 ticket.delete()
             session.commit()
             return closest
+
+    @classmethod
+    def handle_ticket_request(cls, stream, destination):
+        log.debug("Trying to create a ticket to serve %s to %s",
+                stream, destination)
+        new_ticket = cls._already_streaming(stream, destination)
+        if new_ticket:
+            log.info("%s already has a ticket for %s: %s", destination,
+                    stream, new_ticket)
+            # In case we lost the tunnel, just make sure it exists
+            new_ticket.queue_tunnel_creation()
+            return new_ticket
+
+        # TODO base this on actual outgoing bandwidth
+        if (Ticket.query.filter_by(source=Node.me()).count() >
+                settings.OUTGOING_STREAM_LIMIT):
+            log.info("Can't stream %s to %s, already at limit", stream,
+                    destination)
+            return HTTPError(412)
+
+        if stream.source != Node.me():
+            # TODO before we ask others, we should check if we have a ticket
+            # from somewhere with destination us. then we could offer that to
+            # the requester. if so, create the ticket with the "source port" as
+            # the destination port of the existing ticket. the requester will
+            # grab use that destination as their tunnel's source, and pop open
+            # another port on their localhost for the browser.
+            new_ticket = cls._offer_ourselves(stream, destination)
+            if new_ticket:
+                log.info("We can stream %s to %s, created %s",
+                    stream, destination, new_ticket)
+                # In case we lost the tunnel, just make sure it exists
+                new_ticket.queue_tunnel_creation()
+            else:
+                log.info("Propagating the request for streaming %s to %s to "
+                        "our other known nodes", stream, destination)
+                new_ticket = cls._request_stream_from_others(stream,
+                        destination)
+        else:
+            new_ticket = Ticket(stream=stream, destination=destination,
+                confirmed=True)
+            log.info("%s is the source of %s, created %s", destination,
+                    stream, new_ticket)
+        session.commit()
+        return new_ticket
 
     def post(self, stream_slug):
         """Return whether or not this node can forward the stream requested to
@@ -125,47 +179,10 @@ class TicketsHandler(BaseHandler):
         else:
             destination = Node.me()
 
-        log.debug("Trying to create a ticket to serve %s to %s",
-                stream, destination)
-        new_ticket = self._already_streaming(stream, destination)
-        if new_ticket:
-            log.info("%s already has a ticket for %s: %s", destination,
-                    stream, new_ticket)
-            # In case we lost the tunnel, just make sure it exists
-            new_ticket.queue_tunnel_creation()
-            return self.redirect(new_ticket.absolute_url())
-
-        # TODO base this on actual outgoing bandwidth
-        if (Ticket.query.filter_by(source=Node.me()).count() >
-                settings.OUTGOING_STREAM_LIMIT):
-            log.info("Can't stream %s to %s, already at limit", stream,
-                    destination)
-            raise HTTPError(412)
-
-        if stream.source != Node.me():
-            # TODO before we ask others, we should check if we have a ticket
-            # from somewhere with destination us. then we could offer that to
-            # the requester. if so, create the ticket with the "source port" as
-            # the destination port of the existing ticket. the requester will
-            # grab use that destination as their tunnel's source, and pop open
-            # another port on their localhost for the browser.
-            new_ticket = self._offer_ourselves(stream, destination)
-            if new_ticket:
-                log.info("We can stream %s to %s, created %s",
-                    stream, destination, new_ticket)
-                # In case we lost the tunnel, just make sure it exists
-                new_ticket.queue_tunnel_creation()
-                return self.redirect(new_ticket.absolute_url())
-
-            log.info("Propagating the request for streaming %s to %s to our "
-                    "other known nodes", stream, destination)
-            new_ticket = self._request_stream_from_others(stream, destination)
-        else:
-            new_ticket = Ticket(stream=stream, destination=destination,
-                confirmed=True)
-            log.info("%s is the source of %s, created %s", destination,
-                    stream, new_ticket)
-        session.commit()
+        new_ticket = self.handle_ticket_request(stream, destination)
+        if isinstance(new_ticket, HTTPError):
+            # TODO kind of weird....
+            raise new_ticket
         self.redirect(new_ticket.absolute_url())
 
     def get(self):
