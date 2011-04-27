@@ -1,6 +1,5 @@
 import tornado.ioloop, tornado.web
 
-from astral.node.bootstrap import BootstrapThread
 from astral.api.handlers.base import BaseHandler
 from astral.models.node import Node
 from astral.api.client import NodesAPI
@@ -31,6 +30,7 @@ class NodeHandler(BaseHandler):
             # TODO this should work, but there should be a more direct way to
             # re-do the supernode registration. maybe move the
             # register_with_supernode method to the Node model.
+            from astral.node.bootstrap import BootstrapThread
             BootstrapThread().start()
 
         node.delete()
