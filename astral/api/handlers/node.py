@@ -14,7 +14,7 @@ class NodeHandler(BaseHandler):
         unregistering the from the network.
         """
 
-        if not node_uuid:
+        if not node_uuid or node_uuid == Node.me().uuid:
             log.info("Shutting down because of request from %s",
                     self.request.remote_ip)
             tornado.ioloop.IOLoop.instance().stop()
@@ -26,6 +26,12 @@ class NodeHandler(BaseHandler):
             log.info("Notifying closest supernode %s that %s was deleted",
                     closest_supernode, node)
             NodesAPI(closest_supernode.absolute_url()).unregister(node)
+        if node == Node.me().primary_supernode:
+            # TODO this should work, but there should be a more direct way to
+            # re-do the supernode registration. maybe move the
+            # register_with_supernode method to the Node model.
+            BootstrapThread().start()
+
         node.delete()
 
     def get(self, node_uuid=None):
