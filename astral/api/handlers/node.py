@@ -1,5 +1,6 @@
 import tornado.ioloop, tornado.web
 
+from astral.node.bootstrap import BootstrapThread
 from astral.api.handlers.base import BaseHandler
 from astral.models.node import Node
 from astral.api.client import NodesAPI
