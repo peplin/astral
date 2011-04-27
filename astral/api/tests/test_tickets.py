@@ -89,7 +89,8 @@ class TicketsHandlerTest(BaseTest):
 
     def test_other_known_tickets(self):
         stream = StreamFactory()
-        existing_ticket = TicketFactory(stream=stream)
+        existing_ticket = TicketFactory(stream=stream, source=stream.source,
+                hops=1)
         mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(
                         {'source': existing_ticket.destination.uuid,

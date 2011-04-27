@@ -38,6 +38,16 @@ class TicketsHandler(BaseHandler):
             return new_ticket
 
     @classmethod
+    def _already_ticketed(cls, unconfirmed_tickets, node):
+        """Check if we already have an unconfirmed ticket for the node we're
+        looking for.
+        """
+        for unconfirmed_ticket in unconfirmed_tickets:
+            if unconfirmed_ticket.source == node:
+                return True
+        return False
+
+    @classmethod
     def _request_stream_from_node(cls, stream, node, destination):
         try:
             ticket_data = TicketsAPI(node.uri()).create(stream.tickets_url(),
@@ -60,26 +70,32 @@ class TicketsHandler(BaseHandler):
                         hops=ticket_data['hops'] + 1)
 
     @classmethod
-    def _request_stream_from_watchers(cls, stream, destination):
+    def _request_stream_from_watchers(cls, stream, destination,
+            unconfirmed_tickets=None):
         tickets = []
         for ticket in Ticket.query.filter_by(stream=stream):
             if cls._already_seeding(ticket):
                 return [ticket]
             else:
-                tickets.append(cls._request_stream_from_node(stream,
-                        ticket.destination, destination=destination))
+                if not cls._already_ticketed(unconfirmed_tickets,
+                        ticket.destination):
+                    tickets.append(cls._request_stream_from_node(stream,
+                            ticket.destination, destination=destination))
         return filter(None, tickets)
 
     @classmethod
-    def _request_stream_from_supernodes(cls, stream, destination):
+    def _request_stream_from_supernodes(cls, stream, destination,
+            unconfirmed_tickets=None):
         tickets = []
         for supernode in Node.supernodes():
-            tickets.append(cls._request_stream_from_node(stream, supernode,
-                destination))
+            if not cls._already_ticketed(unconfirmed_tickets, destination):
+                tickets.append(cls._request_stream_from_node(stream,
+                    supernode, destination))
         return filter(None, tickets)
 
     @classmethod
-    def _request_stream_from_source(cls, stream, destination):
+    def _request_stream_from_source(cls, stream, destination,
+            unconfirmed_tickets=None):
         return [cls._request_stream_from_node(stream, stream.source,
             destination)]
 
@@ -90,7 +106,7 @@ class TicketsHandler(BaseHandler):
                 cls._request_stream_from_supernodes,
                 cls._request_stream_from_watchers]:
             unconfirmed_tickets.extend(possible_source_method(stream,
-                destination))
+                destination, unconfirmed_tickets=unconfirmed_tickets))
         return filter(None, unconfirmed_tickets)
 
     @classmethod
@@ -102,6 +118,7 @@ class TicketsHandler(BaseHandler):
             unconfirmed_tickets = cls._request_stream(stream, destination)
             if not unconfirmed_tickets:
                 raise HTTPError(412)
+            unconfirmed_tickets = set(unconfirmed_tickets)
             for ticket in unconfirmed_tickets:
                 ticket.source.update_rtt()
             log.debug("Received %d unconfirmed tickets: %s",
