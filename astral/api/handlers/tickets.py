@@ -111,10 +111,6 @@ class TicketsHandler(BaseHandler):
 
     @classmethod
     def _request_stream_from_others(cls, stream, destination):
-            # TODO if we're not a supernode, may not want to do a ton of query
-            # work for another client, since they could do it themselves. the
-            # point is to contact nodes we know of but they don't. perhaps
-            # instead we return a list of nodes so they can do it themselves?
             unconfirmed_tickets = cls._request_stream(stream, destination)
             if not unconfirmed_tickets:
                 raise HTTPError(412)
@@ -148,19 +144,13 @@ class TicketsHandler(BaseHandler):
             return new_ticket
 
         if stream.source != Node.me():
-            # TODO before we ask others, we should check if we have a ticket
-            # from somewhere with destination us. then we could offer that to
-            # the requester. if so, create the ticket with the "source port" as
-            # the destination port of the existing ticket. the requester will
-            # grab use that destination as their tunnel's source, and pop open
-            # another port on their localhost for the browser.
             new_ticket = cls._offer_ourselves(stream, destination)
             if new_ticket:
                 log.info("We can stream %s to %s, created %s",
                     stream, destination, new_ticket)
                 # In case we lost the tunnel, just make sure it exists
                 new_ticket.queue_tunnel_creation()
-            else:
+            elif Node.me().supernode:
                 log.info("Propagating the request for streaming %s to %s to "
                         "our other known nodes", stream, destination)
                 new_ticket = cls._request_stream_from_others(stream,
