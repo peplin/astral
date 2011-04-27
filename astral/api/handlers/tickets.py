@@ -166,7 +166,6 @@ class TicketsHandler(BaseHandler):
     def post(self, stream_slug):
         """Return whether or not this node can forward the stream requested to
         the requesting node, and start doing so if it can."""
-        # TODO break this method up, it's gotten quite big and complicated
         stream = Stream.get_by(slug=stream_slug)
         if not stream:
             try:
@@ -187,9 +186,6 @@ class TicketsHandler(BaseHandler):
             destination = Node.me()
 
         new_ticket = self.handle_ticket_request(stream, destination)
-        if isinstance(new_ticket, HTTPError):
-            # TODO kind of weird....
-            raise new_ticket
         self.redirect(new_ticket.absolute_url())
 
     def get(self):

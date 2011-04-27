@@ -1,3 +1,5 @@
+from tornado.web import HTTPError
+
 from astral.api.handlers.base import BaseHandler
 from astral.api.handlers.tickets import TicketsHandler
 from astral.models import Ticket, Node, Stream, session
@@ -21,8 +23,12 @@ class TicketHandler(BaseHandler):
         if ticket.destination == Node.me():
             log.info("%s is being deleted, we need to find another for "
                     "ourselves", ticket)
-            TicketsHandler.handle_ticket_request(ticket.stream,
-                    ticket.destination)
+            try:
+                TicketsHandler.handle_ticket_request(ticket.stream,
+                        ticket.destination)
+            except HTTPError, e:
+                log.warning("We lost %s and couldn't find a replacement to "
+                        "failover -- our stream is dead: %s", ticket, e)
         elif self.request.remote_ip == ticket.source.ip_address:
             log.info("%s is being deleted by the source, must inform the "
                     "target %s", ticket, ticket.destination)
@@ -30,8 +36,6 @@ class TicketHandler(BaseHandler):
             ticket.delete()
 
     def get(self, stream_slug, destination_uuid=None):
-        # TODO could require target nodes to hit this every so often as a
-        # heartbeat
         ticket = self._load_ticket(stream_slug, destination_uuid)
         if ticket:
             # In case we lost the tunnel, just make sure it exists
