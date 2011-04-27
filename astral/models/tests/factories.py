@@ -16,9 +16,9 @@ factory.Factory.set_creation_function(ELIXIR_CREATION)
 
 class StreamFactory(factory.Factory):
     name = factory.LazyAttribute(lambda a: ' '.join(faker.lorem.words()))
-    # TODO this does happen automatically, but we're not committing after every
-    # factory object is created because of all of the sqlalchemy errors we get.
-    # one day, we'll figure that shit out.
+    # [LH #149] this does happen automatically, but we're not committing after
+    # every factory object is created because of all of the sqlalchemy errors we
+    # get. one day, we'll figure that shit out.
     slug = factory.LazyAttribute(lambda a: slugify(a.name))
     source = factory.LazyAttribute(lambda a: NodeFactory())
 

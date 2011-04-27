@@ -1,6 +1,5 @@
 import threading
 import asyncore
-import time
 
 from astral.net.tunnel import Tunnel
 from astral.models import Ticket, Node, session
@@ -15,10 +14,13 @@ class TunnelControlThread(threading.Thread):
         super(TunnelControlThread, self).__init__()
         self.daemon = True
         self.tunnels = dict()
+        self.async_loop_thread = TunnelLoopThread()
 
     def run(self):
         while True:
             ticket_id = TUNNEL_QUEUE.get()
+            if not self.async_loop_thread.running:
+                self.async_loop_thread.start()
             ticket = Ticket.get_by(id=ticket_id)
             log.debug("Found %s in tunnel queue", ticket)
             if ticket.source == Node.me():
@@ -57,14 +59,9 @@ class TunnelLoopThread(threading.Thread):
     def __init__(self):
         super(TunnelLoopThread, self).__init__()
         self.daemon = True
+        self.running = False
 
     def run(self):
-        # TODO this is going to just spin when we first start up and have no
-        # existing tunnels. we talked about having everyone with the rtmp server
-        # access that not directly, but through a tunnel, so we could use that
-        # to control the on/off. still need that?
-        while True:
+        self.running = True
+        while self.running:
             asyncore.loop()
-            # TODO this is a little workaround to make sure we don't eat up 100%
-            # CPU at the moment
-            time.sleep(1)

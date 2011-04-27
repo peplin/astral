@@ -13,7 +13,7 @@ from astral.api.client import NodesAPI, TicketsAPI
 from astral.node.bootstrap import BootstrapThread
 from astral.node.daemon import DaemonThread
 from astral.node.stream import StreamingThread
-from astral.node.tunnel import TunnelControlThread, TunnelLoopThread
+from astral.node.tunnel import TunnelControlThread
 
 import logging
 log = logging.getLogger(__name__)
@@ -29,7 +29,6 @@ class LocalNode(object):
                 upstream_limit=self.upstream_limit).start()
         StreamingThread().start()
         TunnelControlThread().start()
-        TunnelLoopThread().start()
         DaemonThread().start()
 
         try:
