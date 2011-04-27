@@ -12,19 +12,28 @@ log = logging.getLogger(__name__)
 
 class TicketsHandler(BaseHandler):
     def _already_streaming(self, stream, destination):
-        return Ticket.get_by(stream=stream, source=Node.me(),
-                destination=destination)
+        return Ticket.get_by(stream=stream, destination=destination)
 
     def _already_seeding(self, ticket):
         return Node.me() in [ticket.destination, ticket.stream.source]
 
-    def _request_stream_from_node(self, stream, node, destination=None):
+    def _offer_ourselves(self, stream, destination):
+        ticket = Ticket.get_by(stream=stream, destination=Node.me())
+        if ticket:
+            new_ticket = Ticket(stream=stream, destination=destination,
+                    source_port=ticket.source_port, hops=ticket.hops + 1)
+            log.info("We are receiving %s and have room to forward -- "
+                "created %s to potentially forward to %s", stream, new_ticket,
+                destination)
+            return new_ticket
+
+    def _request_stream_from_node(self, stream, node, destination):
         try:
             ticket_data = TicketsAPI(node.uri()).create(stream.tickets_url(),
-                    destination_uuid=Node.me().uuid)
+                    destination_uuid=destination.uuid)
         except NetworkError, e:
             log.info("Couldn't connect to %s to ask for %s -- deleting "
-                    "the node from the database", node, stream) 
+                    "the node from the database", node, stream)
             log.debug("Node returned: %s", e)
             node.delete()
         else:
@@ -46,17 +55,19 @@ class TicketsHandler(BaseHandler):
                 return [ticket]
             else:
                 tickets.append(self._request_stream_from_node(stream,
-                        ticket.destination))
+                        ticket.destination, destination=destination))
         return filter(None, tickets)
 
     def _request_stream_from_supernodes(self, stream, destination):
         tickets = []
         for supernode in Node.supernodes():
-            tickets.append(self._request_stream_from_node(stream, supernode))
+            tickets.append(self._request_stream_from_node(stream, supernode,
+                destination))
         return filter(None, tickets)
 
     def _request_stream_from_source(self, stream, destination):
-        return [self._request_stream_from_node(stream, stream.source)]
+        return [self._request_stream_from_node(stream, stream.source,
+            destination)]
 
     def _request_stream(self, stream, destination):
         unconfirmed_tickets = []
@@ -66,6 +77,30 @@ class TicketsHandler(BaseHandler):
             unconfirmed_tickets.extend(possible_source_method(stream,
                 destination))
         return filter(None, unconfirmed_tickets)
+
+    def _request_stream_from_others(self, stream, destination):
+            # TODO if we're not a supernode, may not want to do a ton of query
+            # work for another client, since they could do it themselves. the
+            # point is to contact nodes we know of but they don't. perhaps
+            # instead we return a list of nodes so they can do it themselves?
+            unconfirmed_tickets = self._request_stream(stream, destination)
+            if not unconfirmed_tickets:
+                raise HTTPError(412)
+            for ticket in unconfirmed_tickets:
+                ticket.source.update_rtt()
+            log.debug("Received %d unconfirmed tickets: %s",
+                    len(unconfirmed_tickets), unconfirmed_tickets)
+
+            closest = min(unconfirmed_tickets, key=lambda t: t.source.rtt)
+            log.debug("Closest ticket of the unconfirmed ones is %s", closest)
+            TicketsAPI(closest.source.uri()).confirm(closest.absolute_url())
+            closest.confirmed = True
+            session.commit()
+            for ticket in set(unconfirmed_tickets) - set([closest]):
+                TicketsAPI(ticket.source.uri()).cancel(ticket.absolute_url())
+                ticket.delete()
+            session.commit()
+            return closest
 
     def post(self, stream_slug):
         """Return whether or not this node can forward the stream requested to
@@ -114,35 +149,24 @@ class TicketsHandler(BaseHandler):
             # the destination port of the existing ticket. the requester will
             # grab use that destination as their tunnel's source, and pop open
             # another port on their localhost for the browser.
+            new_ticket = self._offer_ourselves(stream, destination)
+            if new_ticket:
+                log.info("We can stream %s to %s, created %s",
+                    stream, destination, new_ticket)
+                # In case we lost the tunnel, just make sure it exists
+                new_ticket.queue_tunnel_creation()
+                return self.redirect(new_ticket.absolute_url())
 
-            # TODO if we're not a supernode, may not want to do a ton of query
-            # work for another client, since they could do it themselves. the
-            # point is to contact nodes we know of but they don't. perhaps
-            # instead we return a list of nodes so they can do it themselves?
-            unconfirmed_tickets = self._request_stream(stream, destination)
-            if not unconfirmed_tickets:
-                raise HTTPError(412)
-            for ticket in unconfirmed_tickets:
-                ticket.source.update_rtt()
-            log.debug("Received %d unconfirmed tickets: %s",
-                    len(unconfirmed_tickets), unconfirmed_tickets)
-
-            closest = min(unconfirmed_tickets, key=lambda t: t.source.rtt)
-            log.debug("Closest ticket of the unconfirmed ones is %s", closest)
-            TicketsAPI(closest.source.uri()).confirm(closest.absolute_url())
-            closest.confirmed = True
-            session.commit()
-            for ticket in set(unconfirmed_tickets) - set([closest]):
-                TicketsAPI(ticket.source.uri()).cancel(ticket.absolute_url())
-                ticket.delete()
-            session.commit()
+            log.info("Propagating the request for streaming %s to %s to our "
+                    "other known nodes", stream, destination)
+            new_ticket = self._request_stream_from_others(stream, destination)
         else:
-            closest = Ticket(stream=stream, destination=destination,
+            new_ticket = Ticket(stream=stream, destination=destination,
                 confirmed=True)
             log.info("%s is the source of %s, created %s", destination,
-                    stream, closest)
+                    stream, new_ticket)
         session.commit()
-        self.redirect(closest.absolute_url())
+        self.redirect(new_ticket.absolute_url())
 
     def get(self):
         """Return a JSON list of all known tickets."""
