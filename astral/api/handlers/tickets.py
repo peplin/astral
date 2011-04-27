@@ -21,6 +21,13 @@ class TicketsHandler(BaseHandler):
 
     @classmethod
     def _offer_ourselves(cls, stream, destination):
+        # TODO base this on actual outgoing bandwidth
+        if (Ticket.query.filter_by(source=Node.me()).count() >
+                settings.OUTGOING_STREAM_LIMIT):
+            log.info("Can't stream %s to %s, already at limit", stream,
+                    destination)
+            return HTTPError(412)
+
         ticket = Ticket.get_by(stream=stream, destination=Node.me())
         if ticket:
             new_ticket = Ticket(stream=stream, destination=destination,
@@ -122,13 +129,6 @@ class TicketsHandler(BaseHandler):
             # In case we lost the tunnel, just make sure it exists
             new_ticket.queue_tunnel_creation()
             return new_ticket
-
-        # TODO base this on actual outgoing bandwidth
-        if (Ticket.query.filter_by(source=Node.me()).count() >
-                settings.OUTGOING_STREAM_LIMIT):
-            log.info("Can't stream %s to %s, already at limit", stream,
-                    destination)
-            return HTTPError(412)
 
         if stream.source != Node.me():
             # TODO before we ask others, we should check if we have a ticket
