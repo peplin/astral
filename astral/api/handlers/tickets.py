@@ -21,9 +21,10 @@ class TicketsHandler(BaseHandler):
 
     @classmethod
     def _offer_ourselves(cls, stream, destination):
-        # TODO base this on actual outgoing bandwidth
-        if (Ticket.query.filter_by(source=Node.me()).count() >
-                settings.OUTGOING_STREAM_LIMIT):
+        tickets = Ticket.query.filter_by(source=Node.me())
+        if (tickets.count() > settings.OUTGOING_STREAM_LIMIT
+                or tickets.count() * settings.STREAM_BITRATE >
+                    Node.me().upstream ):
             log.info("Can't stream %s to %s, already at limit", stream,
                     destination)
             return HTTPError(412)
