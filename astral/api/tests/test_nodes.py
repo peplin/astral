@@ -17,7 +17,7 @@ class NodesHandlerTest(BaseTest):
             ok_(Node.get_by(uuid=node['uuid']))
 
     def test_register_node(self):
-        data = {'uuid': "a-unique-id", 'port': 8000}
+        data = {'uuid': "a-unique-id", 'port': 8001}
         eq_(Node.get_by(uuid=data['uuid']), None)
         self.http_client.fetch(HTTPRequest(
             self.get_url('/nodes'), 'POST', body=json.dumps(data)), self.stop)
