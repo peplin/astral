@@ -79,9 +79,9 @@ class TicketsHandler(BaseHandler):
     @classmethod
     def _request_stream(cls, stream, destination):
         unconfirmed_tickets = []
-        for possible_source_method in [cls._request_stream_from_watchers,
+        for possible_source_method in [cls._request_stream_from_source,
                 cls._request_stream_from_supernodes,
-                cls._request_stream_from_source]:
+                cls._request_stream_from_watchers]:
             unconfirmed_tickets.extend(possible_source_method(stream,
                 destination))
         return filter(None, unconfirmed_tickets)
