@@ -27,7 +27,7 @@ class TicketsHandler(BaseHandler):
                     Node.me().upstream ):
             log.info("Can't stream %s to %s, already at limit", stream,
                     destination)
-            return HTTPError(412)
+            raise HTTPError(412)
 
         ticket = Ticket.get_by(stream=stream, destination=Node.me())
         if ticket:
