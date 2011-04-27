@@ -88,6 +88,8 @@ class TicketsHandlerTest(BaseTest):
         eq_(Ticket.query.count(), tickets_before)
 
     def test_other_known_tickets(self):
+        node = Node.me()
+        node.supernode = True
         stream = StreamFactory()
         existing_ticket = TicketFactory(stream=stream, source=stream.source,
                 hops=1)
@@ -107,6 +109,8 @@ class TicketsHandlerTest(BaseTest):
         eq_(ticket.source, existing_ticket.destination)
 
     def test_remote_source(self):
+        node = Node.me()
+        node.supernode = True
         remote_node = NodeFactory()
         mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(
@@ -133,7 +137,8 @@ class TicketsHandlerTest(BaseTest):
         eq_(Ticket.query.count(), tickets_before)
 
     def test_fallback_to_another_remote_node(self):
-        # TODO node should be able to return a different source than itself
+        node = Node.me()
+        node.supernode = True
         remote_node = NodeFactory()
         mockito.when(TicketsAPI).create(mockito.any(),
                 destination_uuid=mockito.any()).thenReturn(

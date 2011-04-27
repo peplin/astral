@@ -23,8 +23,8 @@ class TicketsHandler(BaseHandler):
     def _offer_ourselves(cls, stream, destination):
         tickets = Ticket.query.filter_by(source=Node.me())
         if (tickets.count() > settings.OUTGOING_STREAM_LIMIT
-                or tickets.count() * settings.STREAM_BITRATE >
-                    Node.me().upstream ):
+                or Node.me().upstream and tickets.count()
+                    * settings.STREAM_BITRATE > Node.me().upstream):
             log.info("Can't stream %s to %s, already at limit", stream,
                     destination)
             raise HTTPError(412)
@@ -156,6 +156,8 @@ class TicketsHandler(BaseHandler):
                         "our other known nodes", stream, destination)
                 new_ticket = cls._request_stream_from_others(stream,
                         destination)
+            else:
+                raise HTTPError(412)
         else:
             new_ticket = Ticket(stream=stream, destination=destination,
                 confirmed=True)
