@@ -25,14 +25,13 @@ class LocalNode(object):
         settings.LOGGING_CONFIG
         self.upstream_limit = upstream_limit
         self.uuid = uuid_override
-        BootstrapThread(node=self.node,
-                upstream_limit=self.upstream_limit).start()
+        self.bootstrap()
         StreamingThread().start()
         TunnelControlThread().start()
         DaemonThread().start()
 
         try:
-            astral.api.app.run()
+            astral.api.app.run(self)
         finally: # tolerate the bare accept here to make sure we always shutdown
             self.shutdown()
 
@@ -79,3 +78,7 @@ class LocalNode(object):
         self._cancel_tickets()
         self._unregister_from_all()
         session.commit()
+
+    def bootstrap(self):
+        BootstrapThread(node=self.node,
+                upstream_limit=self.upstream_limit).start()

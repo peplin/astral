@@ -27,12 +27,8 @@ class NodeHandler(BaseHandler):
                 log.info("Notifying closest supernode %s that %s was deleted",
                         closest_supernode, node)
                 NodesAPI(closest_supernode.absolute_url()).unregister(node)
-            if node == Node.me().primary_supernode:
-                # [LH #151] this should work, but there should be a more direct way
-                # to re-do the supernode registration. maybe move the
-                # register_with_supernode method to the Node model.
-                from astral.node.bootstrap import BootstrapThread
-                BootstrapThread(node=Node.me, upstream_limit=None).start()
+            if node == Node.me().primary_supernode and self.application.node:
+                self.application.node.bootstrap()
             node.delete()
 
     def get(self, node_uuid=None):

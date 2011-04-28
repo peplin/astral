@@ -9,18 +9,19 @@ from astral.conf import settings
 from urls import url_patterns
 
 class NodeWebAPI(tornado.web.Application):
-    def __init__(self):
+    def __init__(self, node=None):
         tornado.web.Application.__init__(self, url_patterns,
                 **settings.TORNADO_SETTINGS)
+        self.node = node
 
 
-def run():
+def run(node):
     from astral.api.handlers.events import queue_listener
     event_thread = threading.Thread(target=queue_listener)
     event_thread.daemon = True
     event_thread.start()
 
-    app = NodeWebAPI()
+    app = NodeWebAPI(node)
     app.listen(settings.TORNADO_SETTINGS['port'])
     try:
         tornado.ioloop.IOLoop.instance().start()
