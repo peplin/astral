@@ -19,6 +19,7 @@ class Ticket(Entity, BaseEntityMixin):
     stream = ManyToOne('Stream')
     confirmed = Field(Boolean, default=False)
     created = Field(DateTime)
+    refreshed = Field(DateTime)
     hops = Field(Integer, default=0)
 
     def __init__(self, source=None, source_port=None, destination=None,

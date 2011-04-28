@@ -1,4 +1,5 @@
 from tornado.web import HTTPError
+import datetime
 
 from astral.conf import settings
 from astral.api.handlers.base import BaseHandler
@@ -49,7 +50,8 @@ class TicketsHandler(BaseHandler):
         return False
 
     @classmethod
-    def _request_stream_from_node(cls, stream, node, destination):
+    def _request_stream_from_node(cls, stream, node, destination,
+            existing_ticket=None):
         log.info("Requesting %s from the node %s, to be delivered to %s",
                 stream, node, destination)
         try:
@@ -61,6 +63,8 @@ class TicketsHandler(BaseHandler):
             log.debug("Node returned: %s", e)
             node.delete()
         else:
+            if existing_ticket:
+                return existing_ticket
             if ticket_data:
                 source = Node.get_by(uuid=ticket_data['source'])
                 if not source:
@@ -151,11 +155,18 @@ class TicketsHandler(BaseHandler):
                 stream, destination)
         new_ticket = cls._already_streaming(stream, destination)
         if new_ticket:
-            log.info("%s already has a ticket for %s: %s", destination,
-                    stream, new_ticket)
-            # In case we lost the tunnel, just make sure it exists
-            new_ticket.queue_tunnel_creation()
-            return new_ticket
+            log.info("%s already has a ticket for %s (%s) -- refreshing with "
+                    "destination to be sure", destination, stream, new_ticket)
+            existing_ticket = cls._request_stream_from_node(stream,
+                    new_ticket.source, destination)
+            if existing_ticket:
+                log.info("%s didn't confirm our old ticket %s, must get a new "
+                        "one", new_ticket.source, new_ticket)
+                existing_ticket.refreshed = datetime.datetime.now()
+                # In case we lost the tunnel, just make sure it exists
+                existing_ticket.queue_tunnel_creation()
+                session.commit()
+                return existing_ticket
 
         if stream.source != Node.me():
             new_ticket = cls._offer_ourselves(stream, destination)

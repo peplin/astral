@@ -110,6 +110,8 @@ class TicketsAPI(NodeAPI):
             return self.delete(ticket_url)
         except NetworkError, e:
             log.warning("Can't connect to server: %s", e)
+        except restkit.ResourceNotFound:
+            pass
 
     def confirm(self, ticket_url):
         try:
