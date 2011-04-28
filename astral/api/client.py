@@ -28,8 +28,9 @@ class NodeAPI(restkit.Resource):
             raise NetworkError(e)
         except ValueError:
             # TODO this is to catch some race condition in restkit
-            if kwargs['retry_count'] > 0:
-                return self.request(retry_count=kwargs['retry_count'] - 1,
+            retry_count = kwargs.get('retry_count', 5)
+            if retry_count:
+                return self.request(retry_count=retry_count - 1,
                         *args, **kwargs)
             else:
                 raise
