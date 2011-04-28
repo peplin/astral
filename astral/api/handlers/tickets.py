@@ -5,7 +5,7 @@ from astral.conf import settings
 from astral.api.handlers.base import BaseHandler
 from astral.api.client import TicketsAPI, NodesAPI, StreamsAPI
 from astral.models import Ticket, Node, Stream, session
-from astral.exceptions import RequestError, ResourceNotFound
+from astral.exceptions import RequestError, ResourceNotFound, RequestFailed
 
 import logging
 log = logging.getLogger(__name__)
