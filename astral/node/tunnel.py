@@ -18,7 +18,7 @@ class TunnelControlThread(threading.Thread):
         self.stream_tunnels = dict()
         self.async_loop_thread = TunnelLoopThread()
 
-    def handle_ticket(self, ticket):
+    def _handle_ticket(self, ticket):
         # reload to get a new database session
         ticket = Ticket.get_by(id=ticket.id)
         if ticket.source == Node.me():
