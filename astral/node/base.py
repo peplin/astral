@@ -7,7 +7,7 @@ Node Base Class.
 """
 
 import astral.api.app
-from astral.models import Node, Ticket
+from astral.models import Node, Ticket, session
 from astral.conf import settings
 from astral.api.client import NodesAPI, TicketsAPI
 from astral.node.bootstrap import BootstrapThread
@@ -68,10 +68,13 @@ class LocalNode(object):
         for ticket in Ticket.query.filter_by(destination=Node.me()).filter(
                 Ticket.source != Node.me()):
             log.info("Cancelling %s", ticket)
-            TicketsAPI(ticket.source.uri()).cancel(ticket.absolute_url())
+            if ticket.source:
+                TicketsAPI(ticket.source.uri()).cancel(ticket.absolute_url())
+        Ticket.query.delete()
 
     def shutdown(self):
         self._unregister_from_origin()
         self._unregister_from_supernode()
         self._cancel_tickets()
         self._unregister_from_all()
+        session.commit()
