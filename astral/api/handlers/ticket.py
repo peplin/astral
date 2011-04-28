@@ -35,13 +35,15 @@ class TicketHandler(BaseHandler):
                 else:
                     log.info("%s is being deleted, we need to find another for "
                             "ourselves", ticket)
-                    try:
-                        TicketsHandler.handle_ticket_request(ticket.stream,
-                                ticket.destination)
-                    except HTTPError, e:
-                        log.warning("We lost %s and couldn't find a "
-                                "replacement to failover -- our stream is "
-                                "dead: %s", ticket, e)
+                    # TODO disabled for now, since the web server will block
+                    # with these deadlocked requests
+                    #try:
+                    #    TicketsHandler.handle_ticket_request(ticket.stream,
+                    #            ticket.destination)
+                    #except HTTPError, e:
+                    #    log.warning("We lost %s and couldn't find a "
+                    #            "replacement to failover -- our stream is "
+                    #            "dead: %s", ticket, e)
             elif self.request.remote_ip == ticket.source.ip_address:
                 log.info("%s is being deleted by the source, must inform the "
                         "target %s", ticket, ticket.destination)
