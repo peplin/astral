@@ -116,8 +116,16 @@ class TicketsHandler(BaseHandler):
             if not unconfirmed_tickets:
                 raise HTTPError(412)
             unconfirmed_tickets = set(unconfirmed_tickets)
+            bad_tickets = set()
             for ticket in unconfirmed_tickets:
                 ticket.source.update_rtt()
+                if Node.me().supernode and not ticket.source.rtt:
+                    log.info("Informing web server that %s is unresponsive "
+                            "and should be deleted", ticket.source)
+                    NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
+                            ticket.source.absolute_url())
+                    bad_tickets.append(ticket)
+            unconfirmed_tickets = unconfirmed_tickets - bad_tickets
             log.debug("Received %d unconfirmed tickets: %s",
                     len(unconfirmed_tickets), unconfirmed_tickets)
 
