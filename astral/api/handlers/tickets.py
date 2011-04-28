@@ -185,8 +185,7 @@ class TicketsHandler(BaseHandler):
             else:
                 raise HTTPError(412)
         else:
-            new_ticket = Ticket(stream=stream, destination=destination,
-                confirmed=True)
+            new_ticket = Ticket(stream=stream, destination=destination)
             log.info("%s is the source of %s, created %s", destination,
                     stream, new_ticket)
         session.commit()
