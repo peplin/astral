@@ -30,8 +30,8 @@ class NodeAPI(restkit.Resource):
             # TODO this is to catch some race condition in restkit
             retry_count = kwargs.get('retry_count', 5)
             if retry_count:
-                return self.request(retry_count=retry_count - 1,
-                        *args, **kwargs)
+                kwargs['retry_count'] = retry_count - 1
+                return self.request(*args, **kwargs)
             else:
                 raise
         else:
