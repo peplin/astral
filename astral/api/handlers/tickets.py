@@ -177,7 +177,7 @@ class TicketsHandler(BaseHandler):
                     stream, destination, new_ticket)
                 # In case we lost the tunnel, just make sure it exists
                 new_ticket.queue_tunnel_creation()
-            elif Node.me().supernode:
+            elif Node.me().supernode or destination == Node.me():
                 log.info("Propagating the request for streaming %s to %s to "
                         "our other known nodes", stream, destination)
                 new_ticket = cls._request_stream_from_others(stream,
