@@ -35,7 +35,6 @@ class BootstrapThread(threading.Thread):
         else:
             log.debug("Nodes returned from the server: %s", nodes)
             for node in nodes:
-                # TODO if we find ourselves with an old IP, need to update
                 if self.node().conflicts_with(node):
                     log.warn("Received %s which conflicts with us (%s) "
                             "-- telling web server to kill it")
