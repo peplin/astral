@@ -85,7 +85,6 @@ class TicketsHandler(BaseHandler):
             unconfirmed_tickets=None):
         tickets = []
         for ticket in Ticket.query.filter_by(stream=stream):
-            from ipdb import set_trace; set_trace(); # TODO
             if cls._already_seeding(ticket):
                 return [ticket]
             else:
