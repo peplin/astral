@@ -234,7 +234,6 @@ class TicketsHandler(BaseHandler):
                             self.request.remote_ip, settings.PORT)
                     # TODO here in the future we would change it to the
                     # remote_ip. now just does supernode.
-                    from ipdb import set_trace; set_trace(); # TODO
                     node_data = NodesAPI(Node.me().primary_supernode.uri()
                             ).find(destination_uuid)
                 except NetworkError, e:
