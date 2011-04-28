@@ -25,6 +25,8 @@ class TicketHandler(BaseHandler):
         ticket = self._load_ticket(stream_slug, destination_uuid)
         if not ticket:
             raise HTTPError(404)
+        ticket.delete()
+        session.commit()
         TicketDeletionPropagationThread(ticket).start()
 
     def get(self, stream_slug, destination_uuid=None):
@@ -97,6 +99,3 @@ class TicketDeletionPropagationThread(threading.Thread):
                         "the source %s", self.ticket, self.ticket.source)
                 TicketsAPI(self.ticket.source.uri()).cancel(
                         self.ticket.absolute_url())
-        if self.ticket:
-            self.ticket.delete()
-            session.commit()
