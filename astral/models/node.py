@@ -89,7 +89,7 @@ class Node(BaseEntityMixin, Entity):
     def closest_supernode(cls):
         closest = cls.supernodes().filter(Node.uuid != Node.me().uuid
                 ).order_by('rtt').first()
-        if not closest:
+        if not Node.me().supernode and not closest:
             log.warn("No supernodes in the database")
         return closest
 
