@@ -23,7 +23,7 @@ class TicketsHandler(BaseHandler):
     @classmethod
     def _offer_ourselves(cls, stream, destination):
         tickets = Ticket.query.filter_by(source=Node.me())
-        if (tickets.count() > settings.OUTGOING_STREAM_LIMIT
+        if (tickets.count() >= settings.OUTGOING_STREAM_LIMIT
                 or Node.me().upstream and tickets.count()
                     * settings.STREAM_BITRATE > Node.me().upstream):
             log.info("Can't stream %s to %s, already at limit", stream,
@@ -52,7 +52,7 @@ class TicketsHandler(BaseHandler):
     @classmethod
     def _request_stream_from_node(cls, stream, node, destination,
             existing_ticket=None):
-        if not node or node == Node.me():
+        if not node or node == Node.me() or node == destination:
             return
         log.info("Requesting %s from the node %s, to be delivered to %s",
                 stream, node, destination)
@@ -63,7 +63,9 @@ class TicketsHandler(BaseHandler):
             log.info("Couldn't connect to %s to ask for %s -- deleting "
                     "the node from the database", node, stream)
             log.debug("Node returned: %s", e)
-            node.delete()
+            # TODO since 412 returns a NetworkError, we would be deleting
+            # everyone who can't deliver....
+            #node.delete()
         else:
             if existing_ticket:
                 return existing_ticket
@@ -157,18 +159,23 @@ class TicketsHandler(BaseHandler):
                 stream, destination)
         new_ticket = cls._already_streaming(stream, destination)
         if new_ticket:
-            log.info("%s already has a ticket for %s (%s) -- refreshing with "
-                    "destination to be sure", destination, stream, new_ticket)
-            existing_ticket = cls._request_stream_from_node(stream,
-                    new_ticket.source, destination)
+            log.info("%s already has a ticket for %s (%s)", destination,
+                    stream, new_ticket)
+            if not new_ticket.source == Node.me():
+                log.info("Refreshing with source %s to be sure",
+                        new_ticket.source)
+                existing_ticket = cls._request_stream_from_node(stream,
+                        new_ticket.source, destination)
+            else:
+                existing_ticket = new_ticket
             if existing_ticket:
-                log.info("%s didn't confirm our old ticket %s, must get a new "
-                        "one", new_ticket.source, new_ticket)
                 existing_ticket.refreshed = datetime.datetime.now()
                 # In case we lost the tunnel, just make sure it exists
                 existing_ticket.queue_tunnel_creation()
                 session.commit()
                 return existing_ticket
+            log.info("%s didn't confirm our old ticket %s, must get a new "
+                    "one", new_ticket.source, new_ticket)
 
         if stream.source != Node.me():
             new_ticket = cls._offer_ourselves(stream, destination)
@@ -186,7 +193,7 @@ class TicketsHandler(BaseHandler):
                 raise HTTPError(412)
         else:
             new_ticket = Ticket(stream=stream, destination=destination)
-            log.info("%s is the source of %s, created %s", destination,
+            log.info("%s is the source of %s, created %s", Node.me(),
                     stream, new_ticket)
         session.commit()
         return new_ticket
@@ -197,20 +204,54 @@ class TicketsHandler(BaseHandler):
         stream = Stream.get_by(slug=stream_slug)
         if not stream:
             try:
+                log.debug("Don't know of stream with slug %s, asking the "
+                        "origin", stream_slug)
                 stream_data = StreamsAPI(settings.ASTRAL_WEBSERVER).find(
                         stream_slug)
             except NetworkError, e:
                 log.warning("Can't connect to server: %s", e)
             except NotFound:
+                log.debug("Origin didn't know of a stream with slug",
+                        stream_slug)
                 raise HTTPError(404)
             else:
                 stream = Stream.from_dict(stream_data)
         if not stream:
+            log.debug("Couldnt find stream with slug %s anywhere", stream_slug)
             raise HTTPError(404)
         destination_uuid = self.get_json_argument('destination_uuid', '')
         if destination_uuid:
             destination = Node.get_by(uuid=destination_uuid)
+            # TODO since we only have the IP, we have to assume the port is 8000
+            # to be able to request back to it for more details. hmm.
+            # TODO another problem is that the tornado server is (and i should
+            # have realized this sooner...) single-threaded, and based on the
+            # event model. So the requsting node is blocked waiting for us to
+            # responsed, then we go and query it. well, that's deadlock! a
+            # workaroud since we're only dealing with single supernode
+            # situations is just to query the supernode, since they MUST know
+            # about that other node.
             if not destination:
+                try:
+                    log.debug("Don't know of a node with UUID %s for the "
+                            "ticket destination -- asking the requester at "
+                            "http://%s:%s", destination_uuid,
+                            self.request.remote_ip, settings.PORT)
+                    # TODO here in the future we would change it to the
+                    # remote_ip. now just does supernode.
+                    node_data = NodesAPI(Node.me().primary_supernode.uri()
+                            ).find(destination_uuid)
+                except NetworkError, e:
+                    log.warning("Can't connect to server: %s", e)
+                except NotFound:
+                    log.debug("Request didn't know of a node with UUID",
+                            destination_uuid)
+                    raise HTTPError(404)
+                else:
+                    destination = Node.from_dict(node_data)
+            if not destination:
+                log.debug("Couldnt find node with UUID %s anywhere",
+                        destination_uuid)
                 raise HTTPError(404)
         else:
             destination = Node.me()

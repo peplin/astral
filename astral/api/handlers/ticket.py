@@ -25,7 +25,7 @@ class TicketHandler(BaseHandler):
         if not ticket:
             raise HTTPError(404)
 
-        if ticket.confirmed:
+        if ticket.confirmed and not ticket.source == Node.me():
             if ticket.destination == Node.me():
                 if self.request.remote_ip == '127.0.0.1':
                     log.info("User is canceling %s -- must inform sender",
@@ -35,13 +35,15 @@ class TicketHandler(BaseHandler):
                 else:
                     log.info("%s is being deleted, we need to find another for "
                             "ourselves", ticket)
-                    try:
-                        TicketsHandler.handle_ticket_request(ticket.stream,
-                                ticket.destination)
-                    except HTTPError, e:
-                        log.warning("We lost %s and couldn't find a "
-                                "replacement to failover -- our stream is "
-                                "dead: %s", ticket, e)
+                    # TODO disabled for now, since the web server will block
+                    # with these deadlocked requests
+                    #try:
+                    #    TicketsHandler.handle_ticket_request(ticket.stream,
+                    #            ticket.destination)
+                    #except HTTPError, e:
+                    #    log.warning("We lost %s and couldn't find a "
+                    #            "replacement to failover -- our stream is "
+                    #            "dead: %s", ticket, e)
             elif self.request.remote_ip == ticket.source.ip_address:
                 log.info("%s is being deleted by the source, must inform the "
                         "target %s", ticket, ticket.destination)
@@ -60,9 +62,11 @@ class TicketHandler(BaseHandler):
         if ticket:
             # TODO this block is somewhat duplicated from TicketsHandler.post,
             # where we refresh an existing ticket.
-            log.info("Refreshing %s with the source", ticket)
-            ticket = TicketsHandler._request_stream_from_node(ticket.stream,
-                    ticket.source, ticket.destination, existing_ticket=ticket)
+            if not ticket.source == Node.me():
+                log.info("Refreshing %s with the source", ticket)
+                ticket = TicketsHandler._request_stream_from_node(ticket.stream,
+                        ticket.source, ticket.destination,
+                        existing_ticket=ticket)
             if ticket:
                 ticket.refreshed = datetime.datetime.now()
                 # In case we lost the tunnel, just make sure it exists
@@ -83,3 +87,4 @@ class TicketHandler(BaseHandler):
             ticket.confirmed = self.get_json_argument('confirmed')
             if ticket.confirmed:
                 log.info("Confirmed %s", ticket)
+            session.commit()

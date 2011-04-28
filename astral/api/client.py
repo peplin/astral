@@ -66,6 +66,12 @@ class NodeAPI(restkit.Resource):
 
 
 class NodesAPI(NodeAPI):
+    def find(self, uuid):
+        return self.get('/node/%s' % uuid).body['node']
+
+    def me(self):
+        return self.get('/node').body['node']
+
     def list(self):
         response = self.get('/nodes')
         if response:
@@ -101,11 +107,14 @@ class StreamsAPI(NodeAPI):
 
 class TicketsAPI(NodeAPI):
     def create(self, tickets_url, destination_uuid=None):
-        response = self.post(tickets_url, payload=json.dumps(
-            {'destination_uuid': destination_uuid}))
-        if response.status_int == 200 or response.status_int == 302:
-            response = self.get(response.headers['Location'])
-            return response.body['ticket']
+        try:
+            response = self.post(tickets_url, payload=json.dumps(
+                {'destination_uuid': destination_uuid}))
+            if response.status_int == 200 or response.status_int == 302:
+                response = self.get(response.headers['Location'])
+                return response.body['ticket']
+        except restkit.ResourceNotFound:
+            pass
 
     def list(self):
         return self.get('/tickets').body['tickets']
