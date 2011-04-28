@@ -52,4 +52,4 @@ class Stream(BaseEntityMixin, Entity):
         Event(message=json.dumps({'type': "stream", 'data': self.to_dict()}))
 
     def __repr__(self):
-        return u'<Stream %s>' % self.slug
+        return u'<Stream %s, from %s>' % (self.slug, self.source)
