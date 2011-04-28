@@ -1,7 +1,9 @@
 from nose.tools import eq_, ok_
 from tornado.httpclient import HTTPRequest
 import json
+import mockito
 
+from astral.api.client import TicketsAPI
 from astral.api.tests import BaseTest
 from astral.models import Ticket, Stream, Node
 from astral.models.tests.factories import TicketFactory
@@ -20,6 +22,11 @@ class TicketHandlerTest(BaseTest):
     def test_get(self):
         node = Node.me()
         ticket = TicketFactory(destination=node)
+        mockito.when(TicketsAPI).create(mockito.any(),
+                destination_uuid=mockito.any()).thenReturn(
+                        {'source': ticket.destination.uuid,
+                            'source_port': ticket.source_port,
+                            'hops': ticket.hops})
         response = self.fetch(ticket.absolute_url())
         eq_(response.code, 200)
         result = json.loads(response.body)
