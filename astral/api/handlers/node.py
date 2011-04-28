@@ -21,19 +21,19 @@ class NodeHandler(BaseHandler):
             return
 
         node = Node.get_by(uuid=node_uuid)
-        closest_supernode = Node.closest_supernode()
-        if closest_supernode and node != closest_supernode:
-            log.info("Notifying closest supernode %s that %s was deleted",
-                    closest_supernode, node)
-            NodesAPI(closest_supernode.absolute_url()).unregister(node)
-        if node == Node.me().primary_supernode:
-            # [LH #151] this should work, but there should be a more direct way
-            # to re-do the supernode registration. maybe move the
-            # register_with_supernode method to the Node model.
-            from astral.node.bootstrap import BootstrapThread
-            BootstrapThread().start()
-
-        node.delete()
+        if node:
+            closest_supernode = Node.closest_supernode()
+            if closest_supernode and node != closest_supernode:
+                log.info("Notifying closest supernode %s that %s was deleted",
+                        closest_supernode, node)
+                NodesAPI(closest_supernode.absolute_url()).unregister(node)
+            if node == Node.me().primary_supernode:
+                # [LH #151] this should work, but there should be a more direct way
+                # to re-do the supernode registration. maybe move the
+                # register_with_supernode method to the Node model.
+                from astral.node.bootstrap import BootstrapThread
+                BootstrapThread(node=Node.me, upstream_limit=None).start()
+            node.delete()
 
     def get(self, node_uuid=None):
         if not node_uuid:
