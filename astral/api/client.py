@@ -21,16 +21,16 @@ class NodeAPI(restkit.Resource):
         return headers or {'Accept': 'application/json',
                 'Content-Type': 'application/json'}
 
-    def request(self, retry_count=5, *args, **kwargs):
+    def request(self, *args, **kwargs):
         try:
             response = super(NodeAPI, self).request(*args, **kwargs)
         except (restkit.RequestError, restkit.RequestFailed), e:
             raise NetworkError(e)
         except ValueError:
             # TODO this is to catch some race condition in restkit
-            if retry_count > 0:
-                return self.request(retry_count=retry_count - 1, *args,
-                        **kwargs)
+            if kwargs['retry_count'] > 0:
+                return self.request(retry_count=kwargs['retry_count'] - 1,
+                        *args, **kwargs)
             else:
                 raise
         else:
