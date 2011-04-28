@@ -89,6 +89,10 @@ class BootstrapThread(threading.Thread):
                     except NetworkError, e:
                         log.warning("Can't connect to supernode %s to register"
                                 ": %s", self.node().primary_supernode, e)
+                        log.info("Informing web server that supernode %s is "
+                                "unresponsive and should be deleted", supernode)
+                        NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
+                                supernode.absolute_url())
                         self.node().primary_supernode = None
                     except RequestFailed, e:
                         log.warning("%s rejected us as a child node: %s",
@@ -116,6 +120,10 @@ class BootstrapThread(threading.Thread):
                         log.warning("Can't connect to supernode %s: %s",
                                 supernode, e)
                         supernode.delete()
+                        log.info("Informing web server that %s is unresponsive "
+                                "and should be deleted", supernode)
+                        NodesAPI(settings.ASTRAL_WEBSERVER).unregister(
+                                supernode.absolute_url())
                     except RequestFailed:
                         log.warning("%s threw an error - sure it's not "
                                 "running on another computer in your LAN with "
