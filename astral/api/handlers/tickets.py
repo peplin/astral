@@ -164,13 +164,13 @@ class TicketsHandler(BaseHandler):
             existing_ticket = cls._request_stream_from_node(stream,
                     new_ticket.source, destination)
             if existing_ticket:
-                log.info("%s didn't confirm our old ticket %s, must get a new "
-                        "one", new_ticket.source, new_ticket)
                 existing_ticket.refreshed = datetime.datetime.now()
                 # In case we lost the tunnel, just make sure it exists
                 existing_ticket.queue_tunnel_creation()
                 session.commit()
                 return existing_ticket
+            log.info("%s didn't confirm our old ticket %s, must get a new "
+                    "one", new_ticket.source, new_ticket)
 
         if stream.source != Node.me():
             new_ticket = cls._offer_ourselves(stream, destination)
