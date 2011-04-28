@@ -22,7 +22,7 @@ class NodeHandler(BaseHandler):
 
         node = Node.get_by(uuid=node_uuid)
         closest_supernode = Node.closest_supernode()
-        if closest_supernode:
+        if closest_supernode and node != closest_supernode:
             log.info("Notifying closest supernode %s that %s was deleted",
                     closest_supernode, node)
             NodesAPI(closest_supernode.absolute_url()).unregister(node)
