@@ -21,7 +21,6 @@ class PingHandler(BaseHandler):
                     min(byte_count, settings.DOWNSTREAM_CHECK_LIMIT)))
         else:
             self.write({'return': 'Pong!'})
-            log.debug("Responded to a ping")
 
     def post(self):
         """Accept arbitrary POST data to check upstream bandwidth. Limit the
