@@ -162,7 +162,8 @@ class TicketsHandler(BaseHandler):
             log.info("%s already has a ticket for %s (%s)", destination,
                     stream, new_ticket)
             if not new_ticket.source == Node.me():
-                log.info("Refreshing with source %s to be sure", ticket.source)
+                log.info("Refreshing with source %s to be sure",
+                        new_ticket.source)
                 existing_ticket = cls._request_stream_from_node(stream,
                         new_ticket.source, destination)
             else:

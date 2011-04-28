@@ -62,9 +62,11 @@ class TicketHandler(BaseHandler):
         if ticket:
             # TODO this block is somewhat duplicated from TicketsHandler.post,
             # where we refresh an existing ticket.
-            log.info("Refreshing %s with the source", ticket)
-            ticket = TicketsHandler._request_stream_from_node(ticket.stream,
-                    ticket.source, ticket.destination, existing_ticket=ticket)
+            if not ticket.source == Node.me():
+                log.info("Refreshing %s with the source", ticket)
+                ticket = TicketsHandler._request_stream_from_node(ticket.stream,
+                        ticket.source, ticket.destination,
+                        existing_ticket=ticket)
             if ticket:
                 ticket.refreshed = datetime.datetime.now()
                 # In case we lost the tunnel, just make sure it exists
