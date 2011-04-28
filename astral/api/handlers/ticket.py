@@ -25,7 +25,7 @@ class TicketHandler(BaseHandler):
         if not ticket:
             raise HTTPError(404)
 
-        if ticket.confirmed:
+        if ticket.confirmed and not ticket.source == Node.me():
             if ticket.destination == Node.me():
                 if self.request.remote_ip == '127.0.0.1':
                     log.info("User is canceling %s -- must inform sender",
