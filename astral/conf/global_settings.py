@@ -13,7 +13,7 @@ LOG_COLOR = True
 PORT = 8000
 
 TORNADO_SETTINGS = {}
-TORNADO_SETTINGS['debug'] = DEBUG
+TORNADO_SETTINGS['debug'] = False # disabled to kill autoreload
 TORNADO_SETTINGS['xsrf_cookies'] = False
 TORNADO_SETTINGS['port'] = PORT
 

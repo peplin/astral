@@ -19,8 +19,6 @@ class StreamingThread(threading.Thread):
         self.agent.apps = dict({settings.RTMP_APP_NAME: self.AstralApp})
 
     def run(self):
-        # TODO this doesn't give up its port when the node autoreloads the code,
-        # so this thread dies. How can we make it properly shut down?
         log.info("Starting RTMP server on port %d", settings.RTMP_PORT)
         self.agent.start('0.0.0.0', settings.RTMP_PORT)
         multitask.run()

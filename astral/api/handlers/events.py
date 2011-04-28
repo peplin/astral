@@ -4,7 +4,7 @@ from astral.models.event import EVENT_QUEUE
 import logging
 log = logging.getLogger(__name__)
 
-# TODO make this thread safe if we have more than one event listener
+# [LH #150] make this thread safe if we have more than one event listener
 LISTENERS = []
 
 
