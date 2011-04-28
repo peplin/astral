@@ -27,8 +27,7 @@ class Node(BaseEntityMixin, Entity):
 
     using_table_options(UniqueConstraint('ip_address', 'port'))
 
-    API_FIELDS = ['ip_address', 'uuid', 'port', 'supernode',
-            'primary_supernode',]
+    API_FIELDS = ['ip_address', 'uuid', 'port', 'supernode',]
     RTT_STEP = 0.2
     BANDWIDTH_STEP = 0.2
 
