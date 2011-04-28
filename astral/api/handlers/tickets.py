@@ -52,7 +52,7 @@ class TicketsHandler(BaseHandler):
     @classmethod
     def _request_stream_from_node(cls, stream, node, destination,
             existing_ticket=None):
-        if not node or node == Node.me():
+        if not node or node == Node.me() or node == destination:
             return
         log.info("Requesting %s from the node %s, to be delivered to %s",
                 stream, node, destination)
