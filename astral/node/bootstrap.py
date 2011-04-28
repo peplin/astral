@@ -11,6 +11,7 @@ from astral.api.client import NodesAPI, StreamsAPI
 import logging
 log = logging.getLogger(__name__)
 
+
 class BootstrapThread(threading.Thread):
     """Runs once at node startup to build knowledge of the network."""
 
@@ -37,9 +38,9 @@ class BootstrapThread(threading.Thread):
             for node in nodes:
                 if self.node().conflicts_with(node):
                     log.warn("Received %s which conflicts with us (%s) "
-                            "-- telling web server to kill it")
-                    NodesAPI(base_url).unregister(
-                            Node.absolute_url(node['uuid']))
+                            "-- telling web server to kill it",
+                            node, self.node())
+                    NodesAPI(base_url).unregister(self.node().absolute_url())
                 else:
                     node = Node.from_dict(node)
                     log.info("Stored %s from %s", node, base_url)
@@ -54,7 +55,8 @@ class BootstrapThread(threading.Thread):
             log.debug("Streams returned from the server: %s", streams)
             for stream in streams:
                 stream = Stream.from_dict(stream)
-                log.info("Stored %s from %s", stream, base_url)
+                if stream:
+                    log.info("Stored %s from %s", stream, base_url)
 
 
     def register_with_origin(self):

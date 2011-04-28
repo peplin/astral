@@ -6,6 +6,9 @@ from astral.models import session, Node
 from astral.models.base import BaseEntityMixin, slugify
 from astral.models.event import Event
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class Stream(BaseEntityMixin, Entity):
     name = Field(Unicode(48), primary_key=True)
@@ -30,9 +33,14 @@ class Stream(BaseEntityMixin, Entity):
         if not stream:
             source = Node.get_by(uuid=data.get('source') or
                     data.get('source_uuid'))
-            stream = cls(source=source, name=data['name'],
-                    description=data.get('description', ''))
-            session.commit()
+            if not source:
+                log.debug("%s had a source not in our database -- not creating " 
+                        "Stream", data)
+                return
+            else:
+                stream = cls(source=source, name=data['name'],
+                        description=data.get('description', ''))
+                session.commit()
         return stream
 
     @before_insert
