@@ -94,14 +94,14 @@ class Node(BaseEntityMixin, Entity):
         return closest
 
     @classmethod
-    def me(cls, uuid_override=None):
+    def me(cls, uuid_override=None, refresh=False):
         desired_uuid = uuid_override or unicode(uuid.getnode())
         node = Node.get_by(uuid=desired_uuid)
         if not node:
             node = Node()
             node.uuid = desired_uuid
             log.info("Using %s for this node's unique ID", node.uuid)
-
+        if refresh:
             try:
                 node.ip_address = RemoteIP().get()
             except NetworkError, e:

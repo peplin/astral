@@ -133,6 +133,7 @@ class BootstrapThread(threading.Thread):
 
     def run(self):
         UpstreamCheckThread(self.node, self.upstream_limit).run()
+        Node.me(refresh=True)
         self.load_static_bootstrap_nodes()
         self.load_dynamic_bootstrap_nodes()
         self.register_with_supernode()
