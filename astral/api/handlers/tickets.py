@@ -159,10 +159,14 @@ class TicketsHandler(BaseHandler):
                 stream, destination)
         new_ticket = cls._already_streaming(stream, destination)
         if new_ticket:
-            log.info("%s already has a ticket for %s (%s) -- refreshing with "
-                    "destination to be sure", destination, stream, new_ticket)
-            existing_ticket = cls._request_stream_from_node(stream,
-                    new_ticket.source, destination)
+            log.info("%s already has a ticket for %s (%s)", destination,
+                    stream, new_ticket)
+            if not new_ticket.source == Node.me():
+                log.info("Refreshing with source %s to be sure", ticket.source)
+                existing_ticket = cls._request_stream_from_node(stream,
+                        new_ticket.source, destination)
+            else:
+                existing_ticket = new_ticket
             if existing_ticket:
                 existing_ticket.refreshed = datetime.datetime.now()
                 # In case we lost the tunnel, just make sure it exists
@@ -188,7 +192,7 @@ class TicketsHandler(BaseHandler):
                 raise HTTPError(412)
         else:
             new_ticket = Ticket(stream=stream, destination=destination)
-            log.info("%s is the source of %s, created %s", destination,
+            log.info("%s is the source of %s, created %s", Node.me(),
                     stream, new_ticket)
         session.commit()
         return new_ticket

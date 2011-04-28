@@ -83,3 +83,4 @@ class TicketHandler(BaseHandler):
             ticket.confirmed = self.get_json_argument('confirmed')
             if ticket.confirmed:
                 log.info("Confirmed %s", ticket)
+            session.commit()
