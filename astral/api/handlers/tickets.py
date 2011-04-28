@@ -232,7 +232,7 @@ class TicketsHandler(BaseHandler):
             # workaroud since we're only dealing with single supernode
             # situations is just to query the supernode, since they MUST know
             # about that other node.
-            if not destination:
+            if not destination and Node.me().primary_supernode:
                 try:
                     log.debug("Don't know of a node with UUID %s for the "
                             "ticket destination -- asking the requester at "

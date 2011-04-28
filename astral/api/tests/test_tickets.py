@@ -58,7 +58,8 @@ class TicketsHandlerTest(BaseTest):
 
     def test_create_twice_locally(self):
         stream = StreamFactory(source=Node.me())
-        TicketFactory(stream=stream, destination=Node.me())
+        TicketFactory(stream=stream, source=Node.me(),
+                destination=Node.me())
         self.http_client.fetch(HTTPRequest(
             self.get_url(stream.tickets_url()), 'POST', body=''),
             self.stop)
@@ -68,17 +69,6 @@ class TicketsHandlerTest(BaseTest):
     def test_already_streaming(self):
         stream = StreamFactory(source=Node.me())
         TicketFactory(stream=stream, source=Node.me(), destination=Node.me())
-        tickets_before = Ticket.query.count()
-        self.http_client.fetch(HTTPRequest(
-            self.get_url(stream.tickets_url()), 'POST', body=''),
-            self.stop)
-        response = self.wait()
-        eq_(response.code, 200)
-        eq_(Ticket.query.count(), tickets_before)
-
-    def test_already_seeding(self):
-        stream = StreamFactory()
-        TicketFactory(stream=stream, destination=Node.me())
         tickets_before = Ticket.query.count()
         self.http_client.fetch(HTTPRequest(
             self.get_url(stream.tickets_url()), 'POST', body=''),

@@ -6,11 +6,12 @@ import mockito
 
 from astral.api.tests import BaseTest
 from astral.api.client import StreamsAPI
-from astral.models import Stream
+from astral.models import Stream, Node
 from astral.models.tests.factories import StreamFactory
 
 class StreamsHandlerTest(BaseTest):
     def test_get_streams(self):
+        Node.me()
         [StreamFactory() for _ in range(3)]
         response = self.fetch('/streams')
         eq_(response.code, 200)
