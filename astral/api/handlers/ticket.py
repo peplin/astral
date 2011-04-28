@@ -22,6 +22,9 @@ class TicketHandler(BaseHandler):
     def delete(self, stream_slug, destination_uuid=None):
         """Stop forwarding the stream to the requesting node."""
         ticket = self._load_ticket(stream_slug, destination_uuid)
+        if not ticket:
+            raise HTTPError(404)
+
         if ticket.destination == Node.me():
             if self.request.remote_ip == '127.0.0.1':
                 log.info("User is canceling %s -- must inform sender",
