@@ -17,7 +17,7 @@ class NodesHandler(BaseHandler):
         """Add the node specified in POSTed JSON to the list of known nodes."""
         uuid = self.get_json_argument('uuid')
         if (Node.me().supernode and self.get_json_argument(
-                    'primary_supernode_uuid') == Node.me().uuid):
+                    'primary_supernode_uuid', '') == Node.me().uuid):
             children_count = Node.query.filter_by(primary_supernode=Node.me()
                     ).count()
             if children_count > settings.SUPERNODE_MAX_CHILDREN:
