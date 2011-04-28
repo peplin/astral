@@ -5,7 +5,7 @@ import random
 import string
 
 from astral.conf import settings
-from astral.exceptions import NetworkError, NotFound
+from astral.exceptions import RequestError, ResourceNotFound
 
 import logging
 log = logging.getLogger(__name__)
@@ -24,8 +24,6 @@ class NodeAPI(restkit.Resource):
     def request(self, *args, **kwargs):
         try:
             response = super(NodeAPI, self).request(*args, **kwargs)
-        except (restkit.RequestError, restkit.RequestFailed), e:
-            raise NetworkError(e)
         except ValueError:
             # TODO this is to catch some race condition in restkit
             retry_count = kwargs.get('retry_count', 5)
@@ -87,16 +85,13 @@ class NodesAPI(NodeAPI):
            node_url = '/node'
         try:
             return self.delete(node_url)
-        except NetworkError, e:
+        except RequestError, e:
             log.warning("Can't connect to server: %s", e)
 
 
 class StreamsAPI(NodeAPI):
     def find(self, slug):
-        try:
-            return self.get('/stream/%s' % slug).body['stream']
-        except restkit.ResourceNotFound, e:
-            raise NotFound(e)
+        return self.get('/stream/%s' % slug).body['stream']
 
     def list(self):
         return self.get('/streams').body['streams']
@@ -113,7 +108,7 @@ class TicketsAPI(NodeAPI):
             if response.status_int == 200 or response.status_int == 302:
                 response = self.get(response.headers['Location'])
                 return response.body['ticket']
-        except restkit.ResourceNotFound:
+        except ResourceNotFound:
             pass
 
     def list(self):
@@ -125,16 +120,16 @@ class TicketsAPI(NodeAPI):
     def cancel(self, ticket_url):
         try:
             return self.delete(ticket_url)
-        except NetworkError, e:
+        except RequestError, e:
             log.warning("Can't connect to server: %s", e)
-        except restkit.ResourceNotFound:
+        except ResourceNotFound:
             pass
 
     def confirm(self, ticket_url):
         try:
             response = self.put(ticket_url, payload=json.dumps(
                 {'confirmed': True}))
-        except NetworkError:
+        except RequestError:
             return False
         else:
             return response.status == 200

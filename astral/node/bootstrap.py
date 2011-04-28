@@ -3,7 +3,7 @@ from restkit import RequestFailed
 
 
 from astral.models import Node, session, Stream
-from astral.exceptions import NetworkError
+from astral.exceptions import RequestError
 from astral.node.upstream import UpstreamCheckThread
 from astral.conf import settings
 from astral.api.client import NodesAPI, StreamsAPI
@@ -31,7 +31,7 @@ class BootstrapThread(threading.Thread):
         base_url = base_url or settings.ASTRAL_WEBSERVER
         try:
             nodes = NodesAPI(base_url).list()
-        except NetworkError, e:
+        except RequestError, e:
             log.warning("Can't connect to server: %s", e)
         else:
             log.debug("Nodes returned from the server: %s", nodes)
@@ -49,7 +49,7 @@ class BootstrapThread(threading.Thread):
         base_url = base_url or settings.ASTRAL_WEBSERVER
         try:
             streams = StreamsAPI(base_url).list()
-        except NetworkError, e:
+        except RequestError, e:
             log.warning("Can't connect to server: %s", e)
         else:
             log.debug("Streams returned from the server: %s", streams)
@@ -67,7 +67,7 @@ class BootstrapThread(threading.Thread):
         try:
             NodesAPI(settings.ASTRAL_WEBSERVER).register(
                     self.node().to_dict())
-        except NetworkError, e:
+        except RequestError, e:
             log.warning("Can't connect to server to register as a "
                     "supernode: %s", e)
 
@@ -90,7 +90,7 @@ class BootstrapThread(threading.Thread):
                     try:
                         NodesAPI(self.node().primary_supernode.uri()).register(
                                 self.node().to_dict())
-                    except NetworkError, e:
+                    except RequestError, e:
                         log.warning("Can't connect to supernode %s to register"
                                 ": %s", self.node().primary_supernode, e)
                         log.info("Informing web server that supernode %s is "
@@ -120,7 +120,7 @@ class BootstrapThread(threading.Thread):
                     try:
                         NodesAPI(supernode.uri()).register(
                                 self.node().to_dict())
-                    except NetworkError, e:
+                    except RequestError, e:
                         log.warning("Can't connect to supernode %s: %s",
                                 supernode, e)
                         supernode.delete()

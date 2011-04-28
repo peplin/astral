@@ -1,11 +1,10 @@
 from nose.tools import ok_, eq_, raises
 import mockito
-import restkit
 
 from astral.models import Node
 from astral.api.client import NodeAPI
 from astral.api.tests import BaseTest
-from astral.models.tests.factories import SupernodeFactory
+from astral.exceptions import RequestError
 
 
 class BaseNodeTest(BaseTest):
@@ -15,9 +14,8 @@ class BaseNodeTest(BaseTest):
 
 
 class NodeRTTTest(BaseNodeTest):
-    @raises(restkit.RequestError)
     def test_update_rtt_error(self):
-        mockito.when(NodeAPI).ping().thenRaise(restkit.RequestError())
+        mockito.when(NodeAPI).ping().thenRaise(RequestError())
         rtt = self.node.update_rtt()
         eq_(rtt, None)
 
@@ -37,10 +35,9 @@ class NodeRTTTest(BaseNodeTest):
 
 
 class NodeDownstreamTest(BaseNodeTest):
-    @raises(restkit.RequestError)
+    @raises(RequestError)
     def test_update_downstream_error(self):
-        mockito.when(NodeAPI).downstream_check().thenRaise(
-                restkit.RequestError())
+        mockito.when(NodeAPI).downstream_check().thenRaise(RequestError())
         downstream = self.node.update_downstream()
         eq_(downstream, None)
 
@@ -60,10 +57,9 @@ class NodeDownstreamTest(BaseNodeTest):
 
 
 class NodeUpstreamTest(BaseNodeTest):
-    @raises(restkit.RequestError)
+    @raises(RequestError)
     def test_update_upstream_error(self):
-        mockito.when(NodeAPI).upstream_check().thenRaise(
-                restkit.RequestError())
+        mockito.when(NodeAPI).upstream_check().thenRaise(RequestError())
         upstream = self.node.update_upstream()
         eq_(upstream, None)
 

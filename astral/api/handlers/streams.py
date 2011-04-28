@@ -4,7 +4,7 @@ from astral.conf import settings
 from astral.api.handlers.base import BaseHandler
 from astral.api.client import StreamsAPI
 from astral.models import Stream, Node
-from astral.exceptions import NetworkError
+from astral.exceptions import RequestError
 
 import logging
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class StreamsHandler(BaseHandler):
             StreamsAPI(settings.ASTRAL_WEBSERVER).create(
                     source_uuid=stream.source.uuid, name=stream.name,
                     slug=stream.slug, description=stream.description)
-        except NetworkError, e:
+        except RequestError, e:
             log.warning("Unable to register stream with origin webserver: %s",
                     e)
         except restkit.RequestFailed:

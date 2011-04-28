@@ -5,7 +5,7 @@ from astral.conf import settings
 from astral.api.handlers.base import BaseHandler
 from astral.api.client import TicketsAPI, NodesAPI, StreamsAPI
 from astral.models import Ticket, Node, Stream, session
-from astral.exceptions import NetworkError, NotFound
+from astral.exceptions import RequestError, ResourceNotFound
 
 import logging
 log = logging.getLogger(__name__)
@@ -59,13 +59,15 @@ class TicketsHandler(BaseHandler):
         try:
             ticket_data = TicketsAPI(node.uri()).create(stream.tickets_url(),
                     destination_uuid=destination.uuid)
-        except NetworkError, e:
+        except RequestError, e:
             log.info("Couldn't connect to %s to ask for %s -- deleting "
                     "the node from the database", node, stream)
             log.debug("Node returned: %s", e)
-            # TODO since 412 returns a NetworkError, we would be deleting
-            # everyone who can't deliver....
-            #node.delete()
+            node.delete()
+        except RequestFailed, e:
+            if e.response.status_int == 412:
+                log.debug("%s didn't have room to forward %s to us",
+                        node, stream)
         else:
             if existing_ticket:
                 return existing_ticket
@@ -209,9 +211,9 @@ class TicketsHandler(BaseHandler):
                         "origin", stream_slug)
                 stream_data = StreamsAPI(settings.ASTRAL_WEBSERVER).find(
                         stream_slug)
-            except NetworkError, e:
+            except RequestError, e:
                 log.warning("Can't connect to server: %s", e)
-            except NotFound:
+            except ResourceNotFound:
                 log.debug("Origin didn't know of a stream with slug",
                         stream_slug)
                 raise HTTPError(404)
@@ -242,9 +244,9 @@ class TicketsHandler(BaseHandler):
                     # remote_ip. now just does supernode.
                     node_data = NodesAPI(Node.me().primary_supernode.uri()
                             ).find(destination_uuid)
-                except NetworkError, e:
+                except RequestError, e:
                     log.warning("Can't connect to server: %s", e)
-                except NotFound:
+                except ResourceNotFound:
                     log.debug("Request didn't know of a node with UUID",
                             destination_uuid)
                     raise HTTPError(404)

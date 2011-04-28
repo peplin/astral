@@ -1,7 +1,7 @@
 import threading
 
 from astral.conf import settings
-from astral.exceptions import NetworkError
+from astral.exceptions import RequestError
 
 import logging
 log = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class UpstreamCheckThread(threading.Thread):
                 self.node().update_upstream(settings.ASTRAL_WEBSERVER)
                 log.info("Determined maximum upstream bandwidth to be "
                         "%d KB/s", self.node().upstream)
-            except NetworkError:
+            except RequestError:
                 log.warning("Unable to connect to origin webserver to "
                         "determine upstream bandwidth")
         else:

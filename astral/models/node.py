@@ -5,7 +5,7 @@ from sqlalchemy import UniqueConstraint
 import uuid
 import json
 
-from astral.exceptions import NetworkError
+from astral.exceptions import RequestError
 from astral.models.base import BaseEntityMixin
 from astral.models.event import Event
 from astral.api.client import NodeAPI, RemoteIP
@@ -47,7 +47,7 @@ class Node(BaseEntityMixin, Entity):
     def update_rtt(self):
         try:
             sampled_rtt = NodeAPI(self.uri()).ping()
-        except NetworkError:
+        except RequestError:
             log.warning("Unable to connect to %s for updating RTT -- "
                     "leaving it at %s", self, self.rtt)
         else:
@@ -78,7 +78,7 @@ class Node(BaseEntityMixin, Entity):
                 Node.uuid != Node.me().uuid):
             try:
                 supernode.update_rtt()
-            except NetworkError:
+            except RequestError:
                 supernode.delete()
 
     @classmethod
@@ -104,7 +104,7 @@ class Node(BaseEntityMixin, Entity):
         if refresh:
             try:
                 node.ip_address = RemoteIP().get()
-            except NetworkError, e:
+            except RequestError, e:
                 log.debug("Couldn't connect to the web: %s", e)
                 node.ip_address = '127.0.0.1'
             log.info("Using %s for this node's IP address", node.ip_address)
