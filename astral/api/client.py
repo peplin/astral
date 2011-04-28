@@ -66,6 +66,9 @@ class NodeAPI(restkit.Resource):
 
 
 class NodesAPI(NodeAPI):
+    def me(self):
+        return self.get('/node')
+
     def list(self):
         response = self.get('/nodes')
         if response:
