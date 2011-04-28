@@ -20,7 +20,7 @@ class PingHandler(BaseHandler):
                 self.write(random_file.read(
                     min(byte_count, settings.DOWNSTREAM_CHECK_LIMIT)))
         else:
-            self.write("Pong!")
+            self.write({'return': 'Pong!'})
             log.debug("Responded to a ping")
 
     def post(self):
