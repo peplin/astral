@@ -66,8 +66,11 @@ class NodeAPI(restkit.Resource):
 
 
 class NodesAPI(NodeAPI):
+    def find(self, uuid):
+        return self.get('/node/%s' % uuid).body['node']
+
     def me(self):
-        return self.get('/node')
+        return self.get('/node').body['node']
 
     def list(self):
         response = self.get('/nodes')

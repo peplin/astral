@@ -220,13 +220,24 @@ class TicketsHandler(BaseHandler):
             destination = Node.get_by(uuid=destination_uuid)
             # TODO since we only have the IP, we have to assume the port is 8000
             # to be able to request back to it for more details. hmm.
+            # TODO another problem is that the tornado server is (and i should
+            # have realized this sooner...) single-threaded, and based on the
+            # event model. So the requsting node is blocked waiting for us to
+            # responsed, then we go and query it. well, that's deadlock! a
+            # workaroud since we're only dealing with single supernode
+            # situations is just to query the supernode, since they MUST know
+            # about that other node.
             if not destination:
                 try:
                     log.debug("Don't know of a node with UUID %s for the "
-                            "ticket destination -- asking the requester",
-                            destination_uuid)
-                    node_data = NodesAPI(self.request.remote_ip
-                            + ':%s' % settings.PORT).me()
+                            "ticket destination -- asking the requester at "
+                            "http://%s:%s", destination_uuid,
+                            self.request.remote_ip, settings.PORT)
+                    # TODO here in the future we would change it to the
+                    # remote_ip. now just does supernode.
+                    from ipdb import set_trace; set_trace(); # TODO
+                    node_data = NodesAPI(Node.me().primary_supernode.uri()
+                            ).find(destination_uuid)
                 except NetworkError, e:
                     log.warning("Can't connect to server: %s", e)
                 except NotFound:
