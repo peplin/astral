@@ -27,8 +27,8 @@ class NodeHandler(BaseHandler):
                     closest_supernode, node)
             NodesAPI(closest_supernode.absolute_url()).unregister(node)
         if node == Node.me().primary_supernode:
-            # TODO this should work, but there should be a more direct way to
-            # re-do the supernode registration. maybe move the
+            # [LH #151] this should work, but there should be a more direct way
+            # to re-do the supernode registration. maybe move the
             # register_with_supernode method to the Node model.
             from astral.node.bootstrap import BootstrapThread
             BootstrapThread().start()
