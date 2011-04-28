@@ -75,7 +75,7 @@ class Ticket(Entity, BaseEntityMixin):
         exist in that case to bring the stream from somewhere else to here.
         """
         if self.confirmed and self.destination == Node.me():
-            TUNNEL_QUEUE.put(self.id)
+            TUNNEL_QUEUE.put(self)
 
     @before_insert
     def set_created_time(self):

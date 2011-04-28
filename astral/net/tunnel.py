@@ -17,8 +17,10 @@ class Tunnel(asyncore.dispatcher, object):
 
     """
     def __init__(self, source_ip, source_port, bind_ip='', bind_port=0,
-            backlog=5):
+            backlog=5, enabled=True):
         super(Tunnel, self).__init__()
+        self.sender = None
+        self.enabled = enabled
         self.source_ip = source_ip
         self.source_port = source_port
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -34,9 +36,16 @@ class Tunnel(asyncore.dispatcher, object):
     def bind_port(self):
         return self.socket.getsockname()[1]
 
+    def change_status(self, enabled):
+        self.enabled = enabled
+        if self.sender:
+            self.sender.enabled = enabled
+            self.sender.receiver.enabled = enabled
+
     def handle_accept(self):
         conn, addr = self.accept()
-        Sender(Receiver(conn), self.source_ip, self.source_port)
+        self.sender = Sender(Receiver(conn, enabled=self.enabled),
+                self.source_ip, self.source_port, enabled=self.enabled)
 
     def __str__(self):
         return "<Tunnel from %s:%s -> %s:%s>" % (self.source_ip,
@@ -44,12 +53,12 @@ class Tunnel(asyncore.dispatcher, object):
 
 
 class Receiver(asyncore.dispatcher, object):
-    def __init__(self, connection):
+    def __init__(self, connection, enabled=True):
         super(Receiver, self).__init__(connection)
         self.from_remote_buffer = ''
         self.to_remote_buffer = ''
         self.sender = None
-        self.enabled = True
+        self.enabled = enabled
 
     def handle_connect(self):
         pass
@@ -73,13 +82,14 @@ class Receiver(asyncore.dispatcher, object):
 
 
 class Sender(asyncore.dispatcher, object):
-    def __init__(self, receiver, destination_ip, destination_port):
+    def __init__(self, receiver, destination_ip, destination_port,
+            enabled=True):
         super(Sender, self).__init__()
         self.receiver = receiver
         receiver.sender = self
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((destination_ip, destination_port))
-        self.enabled = True
+        self.enabled = enabled
 
     def handle_connect(self):
         pass

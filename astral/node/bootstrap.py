@@ -57,7 +57,11 @@ class BootstrapThread(threading.Thread):
                 stream = Stream.from_dict(stream)
                 if stream:
                     log.info("Stored %s from %s", stream, base_url)
+        self.prime_stream_tunnels()
 
+    def prime_stream_tunnels(self):
+        for stream in Stream.query.filter(Stream.source == Node.me()):
+            stream.queue_tunnel_status_flip()
 
     def register_with_origin(self):
         try:
@@ -138,3 +142,4 @@ class BootstrapThread(threading.Thread):
         self.load_dynamic_bootstrap_nodes()
         self.register_with_supernode()
         self.load_streams()
+        session.commit()

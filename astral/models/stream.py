@@ -1,8 +1,9 @@
-from elixir import Field, Unicode, Entity, ManyToOne, Boolean, Text
-from elixir.events import after_insert, before_insert
+from elixir import Field, Unicode, Entity, ManyToOne, Boolean, Text, Integer
+from elixir.events import after_insert, before_insert, after_update
 import json
 
 from astral.models import session, Node
+from astral.models.ticket import TUNNEL_QUEUE
 from astral.models.base import BaseEntityMixin, slugify
 from astral.models.event import Event
 
@@ -16,6 +17,8 @@ class Stream(BaseEntityMixin, Entity):
     slug = Field(Unicode(48))
     streaming = Field(Boolean, default=False)
     source = ManyToOne('Node')
+    # the local tunnel, this value is only set on the source
+    source_port = Field(Integer)
 
     def absolute_url(self):
         return '/stream/%s' % self.slug
@@ -50,6 +53,16 @@ class Stream(BaseEntityMixin, Entity):
     @after_insert
     def emit_new_stream_event(self):
         Event(message=json.dumps({'type': "stream", 'data': self.to_dict()}))
+
+    @after_insert
+    @after_update
+    def queue_tunnel_status_flip(self):
+        """If the stream went from disable to enable or vice versa, need to flip
+        the status of the tunnel. Also, every local stream needs a local tunnel
+        so we have something to control.
+        """
+        if self.source == Node.me():
+            TUNNEL_QUEUE.put(self)
 
     def __repr__(self):
         return u'<Stream %s, from %s>' % (self.slug, self.source)

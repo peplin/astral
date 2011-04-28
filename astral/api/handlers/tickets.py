@@ -192,7 +192,8 @@ class TicketsHandler(BaseHandler):
             else:
                 raise HTTPError(412)
         else:
-            new_ticket = Ticket(stream=stream, destination=destination)
+            new_ticket = Ticket(stream=stream, source_port=stream.source_port,
+                    destination=destination)
             log.info("%s is the source of %s, created %s", Node.me(),
                     stream, new_ticket)
         session.commit()
