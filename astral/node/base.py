@@ -55,8 +55,9 @@ class LocalNode(object):
 
     def _unregister_from_all(self):
         for node in Node.not_me():
-            log.info("Unregistering from %s", node)
-            NodesAPI(node.uri()).unregister(self.node().absolute_url())
+            if node != Node.me().primary_supernode:
+                log.info("Unregistering from %s", node)
+                NodesAPI(node.uri()).unregister(self.node().absolute_url())
 
     def _cancel_tickets(self):
         for ticket in Ticket.query.filter_by(source=Node.me()).filter(
