@@ -37,9 +37,11 @@ LOGGING = {
 if DEBUG:
     ASTRAL_WEBSERVER = "http://localhost:4567"
     DATABASE_PATH = ":memory:"
+    JSON_IP_SERVER = ASTRAL_WEBSERVER + "/ping"
 else:
     ASTRAL_WEBSERVER = "http://astral-video.heroku.com"
     DATABASE_PATH = "db"
+    JSON_IP_SERVER = "http://jsonip.appspot.com"
 
 BOOTSTRAP_NODES = [
 ]

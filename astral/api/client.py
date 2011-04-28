@@ -122,7 +122,7 @@ class TicketsAPI(NodeAPI):
 
 class RemoteIP(NodeAPI):
     def __init__(self):
-        super(RemoteIP, self).__init__('http://jsonip.appspot.com')
+        super(RemoteIP, self).__init__(settings.JSON_IP_SERVER)
 
     def get(self):
         return super(RemoteIP, self).get().body['ip']
