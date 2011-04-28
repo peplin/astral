@@ -48,7 +48,7 @@ class TicketHandler(BaseHandler):
                 # changed. combination of sleep and db flush seems to do it
                 # somewhat reliably, but it's still a race condition.
                 import time
-                time.sleep(1)
+                time.sleep(0.5)
             ticket = self._load_ticket(stream_slug, destination_uuid)
             self.write({'ticket': ticket.to_dict()})
 
