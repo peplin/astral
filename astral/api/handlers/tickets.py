@@ -63,7 +63,9 @@ class TicketsHandler(BaseHandler):
             log.info("Couldn't connect to %s to ask for %s -- deleting "
                     "the node from the database", node, stream)
             log.debug("Node returned: %s", e)
-            node.delete()
+            # TODO since 412 returns a NetworkError, we would be deleting
+            # everyone who can't deliver....
+            #node.delete()
         else:
             if existing_ticket:
                 return existing_ticket
@@ -83,6 +85,7 @@ class TicketsHandler(BaseHandler):
             unconfirmed_tickets=None):
         tickets = []
         for ticket in Ticket.query.filter_by(stream=stream):
+            from ipdb import set_trace; set_trace(); # TODO
             if cls._already_seeding(ticket):
                 return [ticket]
             else:
