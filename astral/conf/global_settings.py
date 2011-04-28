@@ -17,10 +17,7 @@ TORNADO_SETTINGS['debug'] = False # disabled to kill autoreload
 TORNADO_SETTINGS['xsrf_cookies'] = False
 TORNADO_SETTINGS['port'] = PORT
 
-if DEBUG:
-    LOG_LEVEL = logging.DEBUG
-else:
-    LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 USE_SYSLOG = False
 
 LOGGING_CONFIG = 'astral.conf.logconfig.initialize_logging'
