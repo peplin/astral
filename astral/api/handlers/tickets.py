@@ -23,7 +23,6 @@ class TicketsHandler(BaseHandler):
     @classmethod
     def _offer_ourselves(cls, stream, destination):
         tickets = Ticket.query.filter_by(source=Node.me())
-        from ipdb import set_trace; set_trace(); # TODO
         if (tickets.count() >= settings.OUTGOING_STREAM_LIMIT
                 or Node.me().upstream and tickets.count()
                     * settings.STREAM_BITRATE > Node.me().upstream):
