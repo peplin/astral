@@ -64,7 +64,7 @@ class Receiver(asyncore.dispatcher, object):
         pass
 
     def handle_read(self):
-        read = self.recv(4096)
+        read = self.recv(512)
         if self.enabled:
             self.from_remote_buffer += read
 
@@ -95,7 +95,7 @@ class Sender(asyncore.dispatcher, object):
         pass
 
     def handle_read(self):
-        read = self.recv(4096)
+        read = self.recv(512)
         if self.enabled:
             self.receiver.to_remote_buffer += read
 
