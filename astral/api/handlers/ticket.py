@@ -27,7 +27,7 @@ class TicketHandler(BaseHandler):
             raise HTTPError(404)
         ticket.delete()
         session.commit()
-        TicketDeletionPropagationThread(ticket).start()
+        TicketDeletionPropagationThread(ticket, self.request).start()
 
     def get(self, stream_slug, destination_uuid=None):
         ticket = self._load_ticket(stream_slug, destination_uuid)
@@ -67,9 +67,10 @@ class TicketDeletionPropagationThread(threading.Thread):
     replacement for ourselves. We don't want to do this in-band with the delete
     request because it can cause dead locking of API requests between nodes.
     """
-    def __init__(self, ticket):
+    def __init__(self, ticket, request):
         super(TicketDeletionPropagationThread, self).__init__()
         self.ticket = ticket
+        self.request = request
 
     def run(self):
         if self.ticket.confirmed and not self.ticket.source == Node.me():
