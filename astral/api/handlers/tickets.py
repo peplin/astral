@@ -44,12 +44,14 @@ class TicketsHandler(BaseHandler):
         looking for.
         """
         for unconfirmed_ticket in unconfirmed_tickets:
-            if unconfirmed_ticket.source == node:
+            if unconfirmed_ticket and unconfirmed_ticket.source == node:
                 return True
         return False
 
     @classmethod
     def _request_stream_from_node(cls, stream, node, destination):
+        log.info("Requesting %s from the node %s, to be delivered to %s",
+                stream, node, destination)
         try:
             ticket_data = TicketsAPI(node.uri()).create(stream.tickets_url(),
                     destination_uuid=destination.uuid)
@@ -89,7 +91,8 @@ class TicketsHandler(BaseHandler):
             unconfirmed_tickets=None):
         tickets = []
         for supernode in Node.supernodes():
-            if not cls._already_ticketed(unconfirmed_tickets, destination):
+            if supernode != Node.me() and not cls._already_ticketed(
+                    unconfirmed_tickets, destination):
                 tickets.append(cls._request_stream_from_node(stream,
                     supernode, destination))
         return filter(None, tickets)
@@ -97,6 +100,8 @@ class TicketsHandler(BaseHandler):
     @classmethod
     def _request_stream_from_source(cls, stream, destination,
             unconfirmed_tickets=None):
+        log.info("Requesting %s from the source, %s, to be delivered to %s",
+                stream, stream.source, destination)
         return [cls._request_stream_from_node(stream, stream.source,
             destination)]
 
@@ -188,6 +193,8 @@ class TicketsHandler(BaseHandler):
                 raise HTTPError(404)
             else:
                 stream = Stream.from_dict(stream_data)
+        if not stream:
+            raise HTTPError(404)
         destination_uuid = self.get_json_argument('destination_uuid', '')
         if destination_uuid:
             destination = Node.get_by(uuid=destination_uuid)
