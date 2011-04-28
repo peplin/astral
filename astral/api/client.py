@@ -24,7 +24,7 @@ class NodeAPI(restkit.Resource):
     def request(self, *args, **kwargs):
         try:
             response = super(NodeAPI, self).request(*args, **kwargs)
-        except (restkit.RequestError, ValueError), e:
+        except (restkit.RequestError, restkit.RequestFailed, ValueError), e:
             raise NetworkError(e)
         else:
             body = response.body_string()
