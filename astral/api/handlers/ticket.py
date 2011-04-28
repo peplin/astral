@@ -60,15 +60,16 @@ class TicketHandler(BaseHandler):
             log.info("Refreshing %s with the source", ticket)
             ticket = TicketsHandler._request_stream_from_node(ticket.stream,
                     ticket.source, ticket.destination, existing_ticket=ticket)
-            ticket.refreshed = datetime.datetime.now()
-            # In case we lost the tunnel, just make sure it exists
-            ticket.queue_tunnel_creation()
-            session.commit()
-            # TODO this is unideal, but we need to get the new port if it
-            # changed. combination of sleep and db flush seems to do it somewhat
-            # reliably, but it's still a race condition.
-            import time
-            time.sleep(1)
+            if ticket:
+                ticket.refreshed = datetime.datetime.now()
+                # In case we lost the tunnel, just make sure it exists
+                ticket.queue_tunnel_creation()
+                session.commit()
+                # TODO this is unideal, but we need to get the new port if it
+                # changed. combination of sleep and db flush seems to do it somewhat
+                # reliably, but it's still a race condition.
+                import time
+                time.sleep(1)
             ticket = self._load_ticket(stream_slug, destination_uuid)
             self.write({'ticket': ticket.to_dict()})
 
