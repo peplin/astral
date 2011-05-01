@@ -20,7 +20,6 @@ setup(name='astral',
           'factory-boy==1.0.0',],
       install_requires=[
           'tornado>=1.2.1',
-          'importlib>=1.0.2',
           'sqlalchemy>=0.6.6',
           'Elixir>=0.7.1',
           'restkit>=3.2.0',
