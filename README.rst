@@ -86,26 +86,26 @@ Summary of Features
 ===================
 
 - A central web application (astral-web_) exposes both HTML views for users as
-    well as a JSON API for nodes to bootstrap themselves
+  well as a JSON API for nodes to bootstrap themselves
 - Nodes bootstrap from static configuration files as well as from the central
-    webapp
+  webapp
 - Nodes register with a primary supernode
 - Nodes promote themselves to supernode if none are available with sufficient
-    capacity
+  capacity
 - Nodes failover to other supernodes if their choosen primary leaves the
-    network, or optionally promote themselves if no others are available
+  network, or optionally promote themselves if no others are available
 - Nodes request “tickets” for a stream, which is a promise from another node
-    that it will forward the stream, using selective multicast (i.e. to
-    supernodes only)
+  that it will forward the stream, using selective multicast (i.e. to
+  supernodes only)
 - Users running a node can view a list of available streams in a web browser
 - Incoming forwarded streams failover to other providers if the sender leaves
-    the network
+  the network
 - Flash-based stream consumer in the web browser handles temporary breaks in the
-    stream seamlessly
+  stream seamlessly
 - Nodes perform a proper shutdown by informing other nodes and stream receivers
-    of their change in status
+  of their change in status
 - Stream tickets time out after a series of failed heartbeat messages, in order
-    to accommodate improper node shutdown (i.e. unexpected failure)
+  to accommodate improper node shutdown (i.e. unexpected failure)
 - Local node is controlled via Javascript with HTTP requests in the browser
 - Local node can also be controlled with HTTP requests from the command line
 
