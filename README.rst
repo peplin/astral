@@ -56,7 +56,7 @@ Usage
 
 Astral is a two part system, made up of a network of Astral nodes and a single,
 centralized web application (astral-web_). At the moment, an instance of the web
-application is running at http://astral-video.heroku.com, and the Python package
+application is running at http://astral.rhubarbtech.com, and the Python package
 is configured to connect to this address by default.
 
 This repository contains the application to run an individual node, one that is
