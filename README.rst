@@ -14,6 +14,7 @@ This project was completed over the course of the Spring 2011 semester in the
 Distributed Systems (18-842) course at Carnegie Mellon University, taught by
 Professor Bill Nace.
 
+For a more in-depth writeup, see this article_.
 
 Requirements
 ------------
@@ -110,5 +111,3 @@ Summary of Features
   to accommodate improper node shutdown (i.e. unexpected failure)
 - Local node is controlled via Javascript with HTTP requests in the browser
 - Local node can also be controlled with HTTP requests from the command line
-
-For a more in-depth writeup, see this article_.
