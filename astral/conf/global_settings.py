@@ -32,7 +32,7 @@ LOGGING = {
 }
 
 if DEBUG:
-    ASTRAL_WEBSERVER = "http://localhost:4567"
+    ASTRAL_WEBSERVER = "http://192.168.1.2:4567"
     DATABASE_PATH = ":memory:"
     JSON_IP_SERVER = ASTRAL_WEBSERVER + "/ping"
 else:
