@@ -14,7 +14,8 @@ This project was completed over the course of the Spring 2011 semester in the
 Distributed Systems (18-842) course at Carnegie Mellon University, taught by
 Professor Bill Nace.
 
-For a more in-depth writeup, see this article_.
+For a more in-depth writeup, see this article_. This source is available under
+the BSD open source license.
 
 Requirements
 ------------
